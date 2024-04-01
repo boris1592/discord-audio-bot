@@ -1,17 +1,13 @@
-const {
-  Client,
-  Events,
-  GatewayIntentBits,
-  REST,
-  Routes,
-} = require("discord.js");
-const { commands } = require("./commands");
-const { fancyReply, fancyError } = require("./util");
-/** @type {import('pino').Logger} */
-const logger = require("pino")();
-require("dotenv").config();
+import { Client, Events, GatewayIntentBits, REST, Routes } from "discord.js";
+import { config } from "dotenv";
+import pino from "pino";
+import { commands } from "./commands/index.js";
+import { fancyReply, fancyError } from "./util.js";
 
 async function main() {
+  config();
+  const logger = pino();
+
   const commandsMap = Object.fromEntries(
     commands.map((command) => {
       const instance = command();

@@ -1,14 +1,14 @@
-const { SlashCommandBuilder } = require("discord.js");
-const ytdl = require("ytdl-core");
-const {
+import { SlashCommandBuilder } from "discord.js";
+import ytdl from "ytdl-core";
+import {
   createAudioPlayer,
   createAudioResource,
   joinVoiceChannel,
   AudioPlayerStatus,
   NoSubscriberBehavior,
-} = require("@discordjs/voice");
+} from "@discordjs/voice";
 
-class PlayCommand {
+export class PlayCommand {
   constructor() {
     this.info = new SlashCommandBuilder()
       .setName("play")
@@ -61,5 +61,3 @@ class PlayCommand {
     });
   }
 }
-
-module.exports = () => new PlayCommand();

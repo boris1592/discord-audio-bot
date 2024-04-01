@@ -1,3 +1,4 @@
-module.exports = {
-  commands: [require("./ping"), require("./play")],
-};
+import { PingCommand } from "./ping.js";
+import { PlayCommand } from "./play.js";
+
+export const commands = [() => new PingCommand(), () => new PlayCommand()];
