@@ -1,6 +1,6 @@
-const { SlashCommandBuilder } = require("discord.js");
+import { SlashCommandBuilder } from "discord.js";
 
-class PingCommand {
+export class PingCommand {
   constructor() {
     this.info = new SlashCommandBuilder()
       .setName("ping")
@@ -14,5 +14,3 @@ class PingCommand {
     await reply("Pong!");
   }
 }
-
-module.exports = () => new PingCommand();

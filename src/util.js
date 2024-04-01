@@ -1,4 +1,4 @@
-const { EmbedBuilder } = require("discord.js");
+import { EmbedBuilder } from "discord.js";
 
 /**
  * @param {import('discord.js').Interaction} interaction
@@ -16,7 +16,7 @@ async function replyOrFollowup(interaction, options) {
  * @param {import('discord.js').Interaction} interaction
  * @returns {(message: string) => Promise<void>}
  */
-function fancyReply(interaction) {
+export function fancyReply(interaction) {
   return async (message) => {
     await replyOrFollowup(interaction, {
       embeds: [new EmbedBuilder().setColor("#2ecc71").setDescription(message)],
@@ -28,7 +28,7 @@ function fancyReply(interaction) {
  * @param {import('discord.js').Interaction} interaction
  * @returns {(message: string) => Promise<void>}
  */
-function fancyError(interaction) {
+export function fancyError(interaction) {
   return async (message) => {
     await replyOrFollowup(interaction, {
       embeds: [new EmbedBuilder().setColor("#e74c3c").setDescription(message)],
@@ -36,8 +36,3 @@ function fancyError(interaction) {
     });
   };
 }
-
-module.exports = {
-  fancyReply,
-  fancyError,
-};
