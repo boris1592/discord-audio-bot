@@ -1,4 +1,7 @@
-import { PingCommand } from "./ping.js";
-import { PlayCommand } from "./play.js";
+import * as ping from "./ping.js";
+import * as play from "./play.js";
 
-export const commands = [() => new PingCommand(), () => new PlayCommand()];
+export const commands = {
+  [ping.info.name]: { info: ping.info, execute: ping.execute },
+  [play.info.name]: { info: play.info, execute: play.execute },
+};

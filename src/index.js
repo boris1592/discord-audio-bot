@@ -7,21 +7,13 @@ import { fancyReply, fancyError } from "./util.js";
 async function main() {
   config();
   const logger = pino();
-
-  const commandsMap = Object.fromEntries(
-    commands.map((command) => {
-      const instance = command();
-      return [instance.info.name, instance];
-    })
-  );
-
   const rest = new REST().setToken(process.env.TOKEN);
 
   try {
     logger.info(`Started refreshing ${commands.length} (/) commands`);
     const data = await rest.put(
       Routes.applicationCommands(process.env.CLIENT_ID),
-      { body: Object.values(commandsMap).map(({ info }) => info.toJSON()) }
+      { body: Object.values(commands).map(({ info }) => info.toJSON()) },
     );
     logger.info(`Successfully reloaded ${data.length} (/) commands`);
   } catch (error) {
@@ -37,7 +29,7 @@ async function main() {
     if (!interaction.isChatInputCommand()) return;
 
     const subLogger = logger.child({ interaction: interaction.id });
-    const command = commandsMap[interaction.commandName];
+    const command = commands[interaction.commandName];
     const reply = fancyReply(interaction);
     const error = fancyError(interaction);
 
