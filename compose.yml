@@ -4,3 +4,4 @@ services:
     environment:
       - TOKEN=${TOKEN}
       - CLIENT_ID=${CLIENT_ID}
+    restart: always
