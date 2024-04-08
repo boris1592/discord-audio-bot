@@ -3,11 +3,21 @@ import { config } from "dotenv";
 import pino from "pino";
 import { commands } from "./commands/index.js";
 import { fancyReply, fancyError } from "./util.js";
+import { PlayerService } from "./service/player.js";
 
-async function main() {
-  config();
+function buildDeps() {
   const logger = pino();
   const rest = new REST().setToken(process.env.TOKEN);
+  const player = new PlayerService(logger);
+  const client = new Client({
+    intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildVoiceStates],
+  });
+
+  return { logger, rest, player, client };
+}
+
+async function startBot() {
+  const { logger, rest, player, client } = buildDeps();
 
   try {
     logger.info(`Started refreshing ${commands.length} (/) commands`);
@@ -20,10 +30,6 @@ async function main() {
     logger.error(error);
     return;
   }
-
-  const client = new Client({
-    intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildVoiceStates],
-  });
 
   client.on(Events.InteractionCreate, async (interaction) => {
     if (!interaction.isChatInputCommand()) return;
@@ -44,6 +50,7 @@ async function main() {
         reply,
         error,
         interaction,
+        player,
       });
     } catch (err) {
       subLogger.error(err);
@@ -58,4 +65,5 @@ async function main() {
   client.login(process.env.TOKEN);
 }
 
-main();
+config();
+startBot();
