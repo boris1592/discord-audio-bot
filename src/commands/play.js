@@ -1,12 +1,4 @@
 import { SlashCommandBuilder } from "discord.js";
-import ytdl from "ytdl-core";
-import {
-  createAudioPlayer,
-  createAudioResource,
-  joinVoiceChannel,
-  AudioPlayerStatus,
-  NoSubscriberBehavior,
-} from "@discordjs/voice";
 
 export const info = new SlashCommandBuilder()
   .setName("play")
@@ -20,12 +12,13 @@ export const info = new SlashCommandBuilder()
 
 /**
  * @param {{
- *   reply: (message: string) => Promise<void>,
- *   error: (message: string) => Promise<void>,
+ *   reply: (message: string) => Promise<void>
+ *   error: (message: string) => Promise<void>
  *   interaction: import('discord.js').Interaction
+ *   player: import('../service/player').PlayerService
  * }}
  */
-export async function execute({ reply, error, interaction }) {
+export async function execute({ reply, error, interaction, player }) {
   const channel = interaction.member.voice?.channel;
 
   if (!channel) {
@@ -34,26 +27,6 @@ export async function execute({ reply, error, interaction }) {
   }
 
   const url = interaction.options.getString("url");
-  const resource = createAudioResource(
-    ytdl(url, { filter: "audioonly", dlChunkSize: 0 }),
-  );
-
-  const player = createAudioPlayer({
-    behaviors: {
-      noSubscriber: NoSubscriberBehavior.Pause,
-    },
-  });
-  const connection = joinVoiceChannel({
-    channelId: channel.id,
-    guildId: interaction.guildId,
-    adapterCreator: channel.guild.voiceAdapterCreator,
-  });
-  connection.subscribe(player);
-
-  await reply("Starting to play...");
-  player.play(resource);
-
-  player.on(AudioPlayerStatus.Idle, () => {
-    connection.destroy();
-  });
+  player.play(url, channel, interaction.guildId);
+  await reply("Adding to the queue...");
 }
