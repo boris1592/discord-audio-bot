@@ -6,7 +6,7 @@ import { fancyReply, fancyError } from "./util.js";
 import { PlayerService } from "./service/player.js";
 
 function buildDeps() {
-  const logger = pino();
+  const logger = pino({ level: "debug" });
   const rest = new REST().setToken(process.env.TOKEN);
   const player = new PlayerService(logger);
   const client = new Client({
