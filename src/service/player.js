@@ -51,9 +51,7 @@ export class PlayerService {
     const url = player.queue[0];
     player.queue = player.queue.splice(1);
 
-    const resource = createAudioResource(
-      ytdl(url, { filter: "audioonly", dlChunkSize: 0 }),
-    );
+    const resource = createAudioResource(ytdl(url, { filter: "audioonly" }));
     const audioPlayer = createAudioPlayer({
       behaviors: {
         noSubscriber: NoSubscriberBehavior.Pause,
