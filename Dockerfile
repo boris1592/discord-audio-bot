@@ -3,6 +3,6 @@ FROM node:20-alpine
 WORKDIR /bot
 COPY . .
 
-RUN yarn install --production=true
+RUN yarn install
 
-CMD ["node", "src/index"]
+CMD ["/bin/sh", "-c", "node src/index | yarn pino-pretty"]
