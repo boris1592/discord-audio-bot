@@ -1,33 +1,32 @@
-import ytdl from "ytdl-core";
 import {
   createAudioPlayer,
   createAudioResource,
   joinVoiceChannel,
   AudioPlayerStatus,
   NoSubscriberBehavior,
+  VoiceConnection,
 } from "@discordjs/voice";
+import { exec } from "youtube-dl-exec";
+import { Logger } from "pino";
+import { VoiceBasedChannel } from "discord.js";
+import { Readable } from "node:stream";
 
-export class PlayerService {
-  /**
-   * @param {import('pino').Logger} logger
-   */
-  constructor(logger) {
-    this.logger = logger;
-    /**
-     * @type Record<string, {
-     *   connection: any,
-     *   isPlaying: boolean,
-     *   queue: Array<string>,
-     *   channel: any
-     * }>
-     */
+export class Player {
+  private readonly players: Record<
+    string,
+    {
+      isPlaying: boolean;
+      queue: Array<string>;
+      channel: VoiceBasedChannel;
+      connection?: VoiceConnection;
+    }
+  >;
+
+  constructor(private readonly logger: Logger) {
     this.players = {};
   }
 
-  /**
-   * @param {string} guildId
-   */
-  update(guildId) {
+  private update(guildId: string) {
     const player = this.players[guildId];
     const logger = this.logger.child({ guildId });
 
@@ -43,7 +42,7 @@ export class PlayerService {
 
     if (player.queue.length === 0) {
       logger.debug("Queue empty, disconnecting");
-      player.connection.destroy();
+      player.connection?.destroy();
       delete this.players[guildId];
       return;
     }
@@ -51,14 +50,15 @@ export class PlayerService {
     const url = player.queue[0];
     player.queue = player.queue.splice(1);
 
-    const resource = createAudioResource(ytdl(url, { filter: "audioonly" }));
+    const process = exec(url, { extractAudio: true, output: "-" });
+    const resource = createAudioResource(process.stdout as Readable);
     const audioPlayer = createAudioPlayer({
       behaviors: {
         noSubscriber: NoSubscriberBehavior.Pause,
       },
     });
 
-    if (player.connection === null) {
+    if (!player.connection) {
       player.connection = joinVoiceChannel({
         channelId: player.channel.id,
         guildId: guildId,
@@ -85,15 +85,9 @@ export class PlayerService {
     });
   }
 
-  /**
-   * @param {string} url
-   * @param {any} channel
-   * @param {string} guildId
-   */
-  play(url, channel, guildId) {
+  play(url: string, channel: VoiceBasedChannel, guildId: string) {
     if (!this.players[guildId]) {
       this.players[guildId] = {
-        connection: null,
         isPlaying: false,
         queue: [],
         channel,
@@ -104,10 +98,7 @@ export class PlayerService {
     this.update(guildId);
   }
 
-  /**
-   * @param {string} guildId
-   */
-  skip(guildId) {
+  skip(guildId: string) {
     if (!this.players[guildId]) return;
 
     this.players[guildId].isPlaying = false;
