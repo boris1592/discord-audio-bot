@@ -3,6 +3,7 @@ FROM node:20-alpine
 WORKDIR /bot
 COPY . .
 
-RUN yarn install
+RUN apk update && apk upgrade && apk add --no-cache ffmpeg python3
+RUN npm install
 
-CMD ["/bin/sh", "-c", "node src/index | yarn pino-pretty"]
+CMD ["npm", "run", "start:dev"]

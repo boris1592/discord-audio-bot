@@ -1,4 +1,3 @@
-import ytdl from "ytdl-core";
 import {
   createAudioPlayer,
   createAudioResource,
@@ -7,17 +6,19 @@ import {
   NoSubscriberBehavior,
   VoiceConnection,
 } from "@discordjs/voice";
+import { exec } from "youtube-dl-exec";
 import { Logger } from "pino";
 import { VoiceBasedChannel } from "discord.js";
+import { Readable } from "node:stream";
 
 export class Player {
   private readonly players: Record<
     string,
     {
-      connection?: VoiceConnection;
       isPlaying: boolean;
       queue: Array<string>;
       channel: VoiceBasedChannel;
+      connection?: VoiceConnection;
     }
   >;
 
@@ -25,7 +26,7 @@ export class Player {
     this.players = {};
   }
 
-  update(guildId: string) {
+  private update(guildId: string) {
     const player = this.players[guildId];
     const logger = this.logger.child({ guildId });
 
@@ -49,14 +50,15 @@ export class Player {
     const url = player.queue[0];
     player.queue = player.queue.splice(1);
 
-    const resource = createAudioResource(ytdl(url, { filter: "audioonly" }));
+    const process = exec(url, { extractAudio: true, output: "-" });
+    const resource = createAudioResource(process.stdout as Readable);
     const audioPlayer = createAudioPlayer({
       behaviors: {
         noSubscriber: NoSubscriberBehavior.Pause,
       },
     });
 
-    if (player.connection === undefined) {
+    if (!player.connection) {
       player.connection = joinVoiceChannel({
         channelId: player.channel.id,
         guildId: guildId,
