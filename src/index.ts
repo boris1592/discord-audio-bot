@@ -1,31 +1,32 @@
 import { Client, Events, GatewayIntentBits, REST, Routes } from "discord.js";
 import { config } from "dotenv";
 import pino from "pino";
-import { commands } from "./commands/index.js";
-import { fancyReply, fancyError } from "./util.js";
-import { PlayerService } from "./service/player.js";
+import { makeCommands } from "./commands/index";
+import { fancyReply, fancyError } from "./util";
+import { Player } from "./player";
 
 function buildDeps() {
   const logger = pino({ level: "debug" });
-  const rest = new REST().setToken(process.env.TOKEN);
-  const player = new PlayerService(logger);
+  const rest = new REST().setToken(process.env.TOKEN as string);
+  const player = new Player(logger);
   const client = new Client({
     intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildVoiceStates],
   });
+  const commands = makeCommands(player);
 
-  return { logger, rest, player, client };
+  return { logger, rest, client, commands };
 }
 
 async function startBot() {
-  const { logger, rest, player, client } = buildDeps();
+  const { logger, rest, client, commands } = buildDeps();
 
   try {
     logger.info(`Started refreshing ${commands.length} (/) commands`);
     const data = await rest.put(
-      Routes.applicationCommands(process.env.CLIENT_ID),
-      { body: Object.values(commands).map(({ info }) => info.toJSON()) },
+      Routes.applicationCommands(process.env.CLIENT_ID as string),
+      { body: commands.map(({ info }) => info.toJSON()) },
     );
-    logger.info(`Successfully reloaded ${data.length} (/) commands`);
+    logger.info(`Successfully reloaded ${(data as any).length} (/) commands`);
   } catch (error) {
     logger.error(error);
     return;
@@ -35,7 +36,9 @@ async function startBot() {
     if (!interaction.isChatInputCommand()) return;
 
     const subLogger = logger.child({ interaction: interaction.id });
-    const command = commands[interaction.commandName];
+    const command = commands.find(
+      ({ info }) => info.name === interaction.commandName,
+    );
     const reply = fancyReply(interaction);
     const error = fancyError(interaction);
 
@@ -46,12 +49,7 @@ async function startBot() {
     }
 
     try {
-      await command.execute({
-        reply,
-        error,
-        interaction,
-        player,
-      });
+      await command.execute(interaction, reply, error);
     } catch (err) {
       subLogger.error(err);
       await error("An unknown error occured while processing this command");

@@ -2,7 +2,10 @@
   "name": "discord-audio-bot",
   "version": "0.0.1",
   "license": "MIT",
-  "type": "module",
+  "scripts": {
+    "start:dev": "yarn tsc && (node dist/index | yarn pino-pretty)",
+    "start:prod": "yarn tsc && node dist/index"
+  },
   "dependencies": {
     "@discordjs/voice": "^0.16.1",
     "discord.js": "^14.14.1",
@@ -10,6 +13,7 @@
     "ffmpeg-static": "^5.2.0",
     "libsodium-wrappers": "^0.7.13",
     "pino": "^8.19.0",
+    "typescript": "^5.4.5",
     "ytdl-core": "^4.11.5"
   },
   "devDependencies": {

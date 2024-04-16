@@ -1,9 +1,10 @@
 .git/
+dist/
 node_modules/
 .dockerignore
 .env
 .gitignore
-compose.yml
 Dockerfile
 LICENSE
 README.md
+compose.yml

@@ -5,29 +5,27 @@ import {
   joinVoiceChannel,
   AudioPlayerStatus,
   NoSubscriberBehavior,
+  VoiceConnection,
 } from "@discordjs/voice";
+import { Logger } from "pino";
+import { VoiceBasedChannel } from "discord.js";
 
-export class PlayerService {
-  /**
-   * @param {import('pino').Logger} logger
-   */
-  constructor(logger) {
-    this.logger = logger;
-    /**
-     * @type Record<string, {
-     *   connection: any,
-     *   isPlaying: boolean,
-     *   queue: Array<string>,
-     *   channel: any
-     * }>
-     */
+export class Player {
+  private readonly players: Record<
+    string,
+    {
+      connection?: VoiceConnection;
+      isPlaying: boolean;
+      queue: Array<string>;
+      channel: VoiceBasedChannel;
+    }
+  >;
+
+  constructor(private readonly logger: Logger) {
     this.players = {};
   }
 
-  /**
-   * @param {string} guildId
-   */
-  update(guildId) {
+  update(guildId: string) {
     const player = this.players[guildId];
     const logger = this.logger.child({ guildId });
 
@@ -43,7 +41,7 @@ export class PlayerService {
 
     if (player.queue.length === 0) {
       logger.debug("Queue empty, disconnecting");
-      player.connection.destroy();
+      player.connection?.destroy();
       delete this.players[guildId];
       return;
     }
@@ -58,7 +56,7 @@ export class PlayerService {
       },
     });
 
-    if (player.connection === null) {
+    if (player.connection === undefined) {
       player.connection = joinVoiceChannel({
         channelId: player.channel.id,
         guildId: guildId,
@@ -85,15 +83,9 @@ export class PlayerService {
     });
   }
 
-  /**
-   * @param {string} url
-   * @param {any} channel
-   * @param {string} guildId
-   */
-  play(url, channel, guildId) {
+  play(url: string, channel: VoiceBasedChannel, guildId: string) {
     if (!this.players[guildId]) {
       this.players[guildId] = {
-        connection: null,
         isPlaying: false,
         queue: [],
         channel,
@@ -104,10 +96,7 @@ export class PlayerService {
     this.update(guildId);
   }
 
-  /**
-   * @param {string} guildId
-   */
-  skip(guildId) {
+  skip(guildId: string) {
     if (!this.players[guildId]) return;
 
     this.players[guildId].isPlaying = false;
