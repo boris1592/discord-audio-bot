@@ -5,7 +5,7 @@ import {
 } from "discord.js";
 import { DiscordCommand } from "./command";
 import { ReplyFunc } from "../util";
-import { Player } from "../player";
+import { PlayerService } from "../player";
 
 export class PlayCommand implements DiscordCommand {
   info = new SlashCommandBuilder()
@@ -18,7 +18,7 @@ export class PlayCommand implements DiscordCommand {
         .setRequired(true),
     ) as SlashCommandBuilder;
 
-  constructor(private readonly player: Player) {}
+  constructor(private readonly player: PlayerService) {}
 
   async execute(
     interaction: ChatInputCommandInteraction,
@@ -38,7 +38,7 @@ export class PlayCommand implements DiscordCommand {
     }
 
     const url = interaction.options.getString("url") as string;
-    this.player.play(url, channel, interaction.guildId as string);
+    this.player.play(url, channel);
     await reply("Adding to the queue...");
   }
 }
