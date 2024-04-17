@@ -4,7 +4,8 @@
   "license": "MIT",
   "scripts": {
     "start:dev": "npx tsc && (node dist/index | npx pino-pretty)",
-    "start:prod": "npx tsc && node dist/index"
+    "build": "npx tsc",
+    "deploy": "node dist/index"
   },
   "dependencies": {
     "@discordjs/voice": "^0.16.1",

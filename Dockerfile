@@ -5,5 +5,6 @@ COPY . .
 
 RUN apk update && apk upgrade && apk add --no-cache ffmpeg python3
 RUN npm install
+RUN npm run build
 
-CMD ["npm", "run", "start:dev"]
+CMD ["npm", "run", "deploy"]
