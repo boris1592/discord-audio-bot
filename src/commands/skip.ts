@@ -10,12 +10,8 @@ export class SkipCommand implements DiscordCommand {
 
   constructor(private readonly players: Record<string, Player>) {}
 
-  async execute(
-    interaction: ChatInputCommandInteraction,
-    reply: ReplyFunc,
-    _error: ReplyFunc,
-  ) {
+  execute(interaction: ChatInputCommandInteraction, reply: ReplyFunc) {
     this.players[interaction.guildId as string]?.skip();
-    await reply(`Skipping...`);
+    return reply(`Skipping...`);
   }
 }

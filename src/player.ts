@@ -22,7 +22,7 @@ export class Player {
     private readonly onStopped: () => void,
   ) {}
 
-  private update() {
+  async update() {
     if (this.isPlaying) {
       this.logger.debug("Bot is currenty playing, nothing to do");
       return;
@@ -39,6 +39,11 @@ export class Player {
     this.queue = this.queue.splice(1);
 
     const process = exec(url, { extractAudio: true, output: "-" });
+
+    (process as any).catch((err: any) => {
+      this.logger.error(err);
+    });
+
     const resource = createAudioResource(process.stdout as Readable);
     const audioPlayer = createAudioPlayer({
       behaviors: {

@@ -24,21 +24,19 @@ export class PlayCommand implements DiscordCommand {
     private readonly logger: Logger,
   ) {}
 
-  async execute(
+  execute(
     interaction: ChatInputCommandInteraction,
     reply: ReplyFunc,
     error: ReplyFunc,
   ) {
     if (!(interaction.member instanceof GuildMember)) {
-      await error("Not a guild member");
-      return;
+      return error("Not a guild member");
     }
 
     const channel = interaction.member.voice?.channel;
 
     if (!channel) {
-      await error("You should be in a voice channel to use this command");
-      return;
+      return error("You should be in a voice channel to use this command");
     }
 
     const url = interaction.options.getString("url") as string;
@@ -52,6 +50,6 @@ export class PlayCommand implements DiscordCommand {
     }
 
     this.players[channel.guildId].play(url);
-    await reply("Adding to the queue...");
+    return reply("Adding to the queue...");
   }
 }

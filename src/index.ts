@@ -7,11 +7,10 @@ import { fancyReply, fancyError } from "./util";
 function buildDeps() {
   const logger = pino({ level: "debug" });
   const rest = new REST().setToken(process.env.TOKEN as string);
-  const players = {};
   const client = new Client({
     intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildVoiceStates],
   });
-  const commands = makeCommands(players, logger);
+  const commands = makeCommands(logger);
 
   return { logger, rest, client, commands };
 }
