@@ -1,9 +1,15 @@
-import { PlayerService } from "../player";
+import { Logger } from "pino";
 import { DiscordCommand } from "./command";
-import { PingCommand } from "./ping";
 import { PlayCommand } from "./play";
 import { SkipCommand } from "./skip";
+import { QueueCommand } from "./queue";
 
-export function makeCommands(player: PlayerService): Array<DiscordCommand> {
-  return [new PingCommand(), new PlayCommand(player), new SkipCommand(player)];
+export function makeCommands(logger: Logger): Array<DiscordCommand> {
+  const players = {};
+
+  return [
+    new PlayCommand(players, logger),
+    new SkipCommand(players),
+    new QueueCommand(players),
+  ];
 }
