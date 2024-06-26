@@ -22,7 +22,7 @@ export class Player {
     private readonly onStopped: () => void,
   ) {}
 
-  async update() {
+  update() {
     if (this.isPlaying) {
       this.logger.debug("Bot is currenty playing, nothing to do");
       return;
