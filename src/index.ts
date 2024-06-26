@@ -3,16 +3,15 @@ import { config } from "dotenv";
 import pino from "pino";
 import { makeCommands } from "./commands/index";
 import { fancyReply, fancyError } from "./util";
-import { PlayerService } from "./player";
 
 function buildDeps() {
   const logger = pino({ level: "debug" });
   const rest = new REST().setToken(process.env.TOKEN as string);
-  const player = new PlayerService(logger);
+  const players = {};
   const client = new Client({
     intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildVoiceStates],
   });
-  const commands = makeCommands(player);
+  const commands = makeCommands(players, logger);
 
   return { logger, rest, client, commands };
 }

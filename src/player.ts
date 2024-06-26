@@ -82,4 +82,8 @@ export class Player {
     this.isPlaying = false;
     this.update();
   }
+
+  getQueue() {
+    return this.queue;
+  }
 }
