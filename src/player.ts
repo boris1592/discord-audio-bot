@@ -2,6 +2,7 @@ import {
   AudioPlayerStatus,
   NoSubscriberBehavior,
   VoiceConnection,
+  VoiceConnectionStatus,
   createAudioPlayer,
   createAudioResource,
   joinVoiceChannel,
@@ -12,7 +13,7 @@ import { exec } from "youtube-dl-exec";
 import { Readable } from "node:stream";
 
 export class Player {
-  private isPlaying: boolean = false;
+  private isPlaying = false;
   private queue: Array<string> = [];
   private connection?: VoiceConnection;
 
@@ -20,7 +21,9 @@ export class Player {
     private readonly channel: VoiceBasedChannel,
     private readonly logger: Logger,
     private readonly onStopped: () => void,
-  ) {}
+  ) {
+    const asd = undefined;
+  }
 
   update() {
     if (this.isPlaying) {
@@ -56,6 +59,11 @@ export class Player {
         channelId: this.channel.id,
         guildId: this.channel.guildId,
         adapterCreator: this.channel.guild.voiceAdapterCreator,
+      });
+
+      this.connection.on(VoiceConnectionStatus.Disconnected, () => {
+        this.logger.info("Disconnected from the channel");
+        this.onStopped();
       });
     }
 
