@@ -2,6 +2,7 @@ import {
   AudioPlayerStatus,
   NoSubscriberBehavior,
   VoiceConnection,
+  VoiceConnectionStatus,
   createAudioPlayer,
   createAudioResource,
   joinVoiceChannel,
@@ -56,6 +57,11 @@ export class Player {
         channelId: this.channel.id,
         guildId: this.channel.guildId,
         adapterCreator: this.channel.guild.voiceAdapterCreator,
+      });
+
+      this.connection.on(VoiceConnectionStatus.Disconnected, () => {
+        this.logger.info("Disconnected from the channel");
+        this.onStopped();
       });
     }
 
