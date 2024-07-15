@@ -13,7 +13,7 @@ import { exec } from "youtube-dl-exec";
 import { Readable } from "node:stream";
 
 export class Player {
-  private isPlaying = false;
+  private isPlaying: boolean = false;
   private queue: Array<string> = [];
   private connection?: VoiceConnection;
 
@@ -21,9 +21,7 @@ export class Player {
     private readonly channel: VoiceBasedChannel,
     private readonly logger: Logger,
     private readonly onStopped: () => void,
-  ) {
-    const asd = undefined;
-  }
+  ) {}
 
   update() {
     if (this.isPlaying) {
