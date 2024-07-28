@@ -3,7 +3,7 @@
 .dockerignore
 .env
 .gitignore
+compose.yml
 Dockerfile
 LICENSE
 README.md
-compose.yml
