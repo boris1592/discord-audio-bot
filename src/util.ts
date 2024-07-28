@@ -37,7 +37,7 @@ export function fancyError(interaction: ChatInputCommandInteraction) {
 }
 
 export function execDlp(url: string) {
-  const command = new Deno.Command("yt-dlp", {
+  const command = new Deno.Command("./yt-dlp", {
     args: [url, "-x", "--audio-format", "opus", "-o", "-"],
     stdout: "piped",
   });

@@ -1,8 +1,11 @@
-FROM denoland/deno:alpine-1.45.4
+FROM denoland/deno:ubuntu-1.45.2
 
-RUN apk update && apk add --no-cache ffmpeg yt-dlp
+RUN apt-get update && apt-get install -y ffmpeg curl python3
 
 WORKDIR /bot
+
+RUN curl -L https://github.com/yt-dlp/yt-dlp/releases/latest/download/yt-dlp -o ./yt-dlp
+RUN chmod a+rx ./yt-dlp
 
 COPY src/deps.ts src/deps.ts
 RUN deno cache src/deps.ts
