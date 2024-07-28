@@ -1,6 +1,6 @@
-FROM denoland/deno:1.45.4
+FROM denoland/deno:alpine-1.45.4
 
-RUN apt update && apt install -y ffmpeg yt-dlp
+RUN apk update && apk add --no-cache ffmpeg yt-dlp
 
 WORKDIR /bot
 
