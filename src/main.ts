@@ -1,12 +1,11 @@
-import { Client, Events, GatewayIntentBits, REST, Routes } from "discord.js";
-import { config } from "dotenv";
-import pino from "pino";
-import { makeCommands } from "./commands/index";
-import { fancyReply, fancyError } from "./util";
+import { Client, Events, GatewayIntentBits, REST, Routes } from "./deps.ts";
+import { pino } from "./deps.ts";
+import { makeCommands } from "./commands/index.ts";
+import { fancyError, fancyReply } from "./util.ts";
 
 function buildDeps() {
   const logger = pino({ level: "debug" });
-  const rest = new REST().setToken(process.env.TOKEN as string);
+  const rest = new REST().setToken(Deno.env.get("TOKEN") as string);
   const client = new Client({
     intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildVoiceStates],
   });
@@ -20,11 +19,17 @@ async function startBot() {
 
   try {
     logger.info(`Started refreshing ${commands.length} (/) commands`);
+
     const data = await rest.put(
-      Routes.applicationCommands(process.env.CLIENT_ID as string),
+      Routes.applicationCommands(Deno.env.get("CLIENT_ID") as string),
       { body: commands.map(({ info }) => info.toJSON()) },
     );
-    logger.info(`Successfully reloaded ${(data as any).length} (/) commands`);
+
+    logger.info(
+      `Successfully reloaded ${
+        (data as { length: number }).length
+      } (/) commands`,
+    );
   } catch (error) {
     logger.error(error);
     return;
@@ -58,8 +63,7 @@ async function startBot() {
     logger.info(`Logged in as ${readyClient.user.tag}`);
   });
 
-  client.login(process.env.TOKEN);
+  client.login(Deno.env.get("TOKEN"));
 }
 
-config();
 startBot();

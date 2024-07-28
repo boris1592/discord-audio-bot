@@ -6,11 +6,10 @@ import {
   createAudioPlayer,
   createAudioResource,
   joinVoiceChannel,
-} from "@discordjs/voice";
-import { VoiceBasedChannel } from "discord.js";
-import { Logger } from "pino";
-import { exec } from "youtube-dl-exec";
-import { Readable } from "node:stream";
+} from "./deps.ts";
+import { VoiceBasedChannel } from "./deps.ts";
+import { Logger } from "./deps.ts";
+import { execDlp } from "./util.ts";
 
 export class Player {
   private isPlaying: boolean = false;
@@ -39,13 +38,8 @@ export class Player {
     const url = this.queue[0];
     this.queue = this.queue.splice(1);
 
-    const process = exec(url, { extractAudio: true, output: "-" });
-
-    (process as any).catch((err: any) => {
-      this.logger.error(err);
-    });
-
-    const resource = createAudioResource(process.stdout as Readable);
+    const stdout = execDlp(url);
+    const resource = createAudioResource(stdout);
     const audioPlayer = createAudioPlayer({
       behaviors: {
         noSubscriber: NoSubscriberBehavior.Pause,

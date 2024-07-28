@@ -1,6 +1,5 @@
 .git/
-dist/
-node_modules/
+.zed/
 .dockerignore
 .env
 .gitignore

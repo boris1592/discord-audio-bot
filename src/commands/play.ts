@@ -2,11 +2,11 @@ import {
   ChatInputCommandInteraction,
   GuildMember,
   SlashCommandBuilder,
-} from "discord.js";
-import { DiscordCommand } from "./command";
-import { ReplyFunc } from "../util";
-import { Player } from "../player";
-import { Logger } from "pino";
+} from "../deps.ts";
+import { DiscordCommand } from "./command.ts";
+import { ReplyFunc } from "../util.ts";
+import { Player } from "../player.ts";
+import { Logger } from "../deps.ts";
 
 export class PlayCommand implements DiscordCommand {
   info = new SlashCommandBuilder()

@@ -3,7 +3,10 @@ import {
   InteractionReplyOptions,
   MessagePayload,
   ChatInputCommandInteraction,
-} from "discord.js";
+} from "./deps.ts";
+import { Readable } from "./deps.ts";
+
+export type ReplyFunc = (message: string) => Promise<void>;
 
 async function replyOrFollowup(
   interaction: ChatInputCommandInteraction,
@@ -33,4 +36,10 @@ export function fancyError(interaction: ChatInputCommandInteraction) {
   };
 }
 
-export type ReplyFunc = (message: string) => Promise<void>;
+export function execDlp(url: string) {
+  const command = new Deno.Command("yt-dlp", {
+    args: [url, "-x", "--audio-format", "opus", "-o", "-"],
+    stdout: "piped",
+  });
+  return Readable.fromWeb(command.spawn().stdout as any);
+}

@@ -1,8 +1,8 @@
-import { Logger } from "pino";
-import { DiscordCommand } from "./command";
-import { PlayCommand } from "./play";
-import { SkipCommand } from "./skip";
-import { QueueCommand } from "./queue";
+import { Logger } from "../deps.ts";
+import { DiscordCommand } from "./command.ts";
+import { PlayCommand } from "./play.ts";
+import { SkipCommand } from "./skip.ts";
+import { QueueCommand } from "./queue.ts";
 
 export function makeCommands(logger: Logger): Array<DiscordCommand> {
   const players = {};

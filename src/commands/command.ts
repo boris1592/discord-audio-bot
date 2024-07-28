@@ -1,5 +1,5 @@
-import { ChatInputCommandInteraction, SlashCommandBuilder } from "discord.js";
-import { ReplyFunc } from "../util";
+import { ChatInputCommandInteraction, SlashCommandBuilder } from "../deps.ts";
+import { ReplyFunc } from "../util.ts";
 
 export interface DiscordCommand {
   readonly info: SlashCommandBuilder;
