@@ -1,6 +1,6 @@
-FROM denoland/deno:ubuntu-1.45.2
+FROM denoland/deno:1.45.2
 
-RUN apt-get update && apt-get install -y ffmpeg curl python3
+RUN apt-get update && apt-get install -y ffmpeg curl
 
 WORKDIR /bot
 
