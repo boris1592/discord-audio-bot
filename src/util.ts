@@ -1,8 +1,8 @@
 import {
+  ChatInputCommandInteraction,
   EmbedBuilder,
   InteractionReplyOptions,
   MessagePayload,
-  ChatInputCommandInteraction,
 } from "./deps.ts";
 import { Readable } from "./deps.ts";
 
@@ -41,5 +41,7 @@ export function execDlp(url: string) {
     args: [url, "-x", "--audio-format", "opus", "-o", "-"],
     stdout: "piped",
   });
+
+  // deno-lint-ignore no-explicit-any -- node's Readable doesn't work properly with generics
   return Readable.fromWeb(command.spawn().stdout as any);
 }

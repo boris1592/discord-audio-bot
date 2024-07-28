@@ -6,7 +6,6 @@ import {
 import { DiscordCommand } from "./command.ts";
 import { ReplyFunc } from "../util.ts";
 import { Player } from "../player.ts";
-import { Logger } from "../deps.ts";
 
 export class PlayCommand implements DiscordCommand {
   info = new SlashCommandBuilder()
@@ -16,13 +15,10 @@ export class PlayCommand implements DiscordCommand {
       option
         .setName("url")
         .setDescription("YouTube video link")
-        .setRequired(true),
+        .setRequired(true)
     ) as SlashCommandBuilder;
 
-  constructor(
-    private readonly players: Record<string, Player>,
-    private readonly logger: Logger,
-  ) {}
+  constructor(private readonly players: Record<string, Player>) {}
 
   execute(
     interaction: ChatInputCommandInteraction,
@@ -44,7 +40,6 @@ export class PlayCommand implements DiscordCommand {
     if (!this.players[channel.guildId]) {
       this.players[channel.guildId] = new Player(
         channel,
-        this.logger.child({ guildId: channel.guildId }),
         () => delete this.players[channel.guildId],
       );
     }

@@ -1,14 +1,14 @@
 import {
   AudioPlayerStatus,
-  NoSubscriberBehavior,
-  VoiceConnection,
-  VoiceConnectionStatus,
   createAudioPlayer,
   createAudioResource,
   joinVoiceChannel,
+  NoSubscriberBehavior,
+  VoiceConnection,
+  VoiceConnectionStatus,
 } from "./deps.ts";
 import { VoiceBasedChannel } from "./deps.ts";
-import { Logger } from "./deps.ts";
+import { log } from "./deps.ts";
 import { execDlp } from "./util.ts";
 
 export class Player {
@@ -18,18 +18,17 @@ export class Player {
 
   constructor(
     private readonly channel: VoiceBasedChannel,
-    private readonly logger: Logger,
     private readonly onStopped: () => void,
   ) {}
 
   update() {
     if (this.isPlaying) {
-      this.logger.debug("Bot is currenty playing, nothing to do");
+      log.debug("Bot is currenty playing, nothing to do");
       return;
     }
 
     if (this.queue.length === 0) {
-      this.logger.debug("Queue empty, disconnecting");
+      log.debug("Queue empty, disconnecting");
       this.connection?.destroy();
       this.onStopped();
       return;
@@ -54,12 +53,12 @@ export class Player {
       });
 
       this.connection.on(VoiceConnectionStatus.Disconnected, () => {
-        this.logger.info("Disconnected from the channel");
+        log.info("Disconnected from the channel");
         this.onStopped();
       });
     }
 
-    this.logger.debug(`Starting to play ${url}`);
+    log.debug(`Starting to play ${url}`);
     this.isPlaying = true;
 
     this.connection.subscribe(audioPlayer);
@@ -71,8 +70,8 @@ export class Player {
     });
 
     audioPlayer.on("error", (err) => {
-      this.logger.error(err);
-      this.logger.debug("Skipping because an error occured");
+      log.error(err);
+      log.debug("Skipping because an error occured");
       this.isPlaying = false;
       this.update();
     });
