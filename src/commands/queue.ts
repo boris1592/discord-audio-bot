@@ -2,10 +2,10 @@ import {
   CacheType,
   ChatInputCommandInteraction,
   SlashCommandBuilder,
-} from "discord.js";
-import { DiscordCommand } from "./command";
-import { Player } from "../player";
-import { ReplyFunc } from "../util";
+} from "../deps.ts";
+import { DiscordCommand } from "./command.ts";
+import { Player } from "../player.ts";
+import { ReplyFunc } from "../util.ts";
 
 export class QueueCommand implements DiscordCommand {
   info = new SlashCommandBuilder().setName("queue").setDescription("Get queue");
@@ -20,6 +20,7 @@ export class QueueCommand implements DiscordCommand {
 
     if (queue.length === 0) return reply("Queue empty.");
 
+    // TODO: Get info about a video from its URL
     const msg = queue
       .map((url, index) => `${index + 1}. ${url}\n`)
       .reduce((prev, curr) => prev + curr);

@@ -1,14 +1,13 @@
-import { Logger } from "pino";
-import { DiscordCommand } from "./command";
-import { PlayCommand } from "./play";
-import { SkipCommand } from "./skip";
-import { QueueCommand } from "./queue";
+import { DiscordCommand } from "./command.ts";
+import { PlayCommand } from "./play.ts";
+import { SkipCommand } from "./skip.ts";
+import { QueueCommand } from "./queue.ts";
 
-export function makeCommands(logger: Logger): Array<DiscordCommand> {
+export function makeCommands(): Array<DiscordCommand> {
   const players = {};
 
   return [
-    new PlayCommand(players, logger),
+    new PlayCommand(players),
     new SkipCommand(players),
     new QueueCommand(players),
   ];

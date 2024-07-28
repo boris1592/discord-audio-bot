@@ -1,9 +1,12 @@
 import {
+  ChatInputCommandInteraction,
   EmbedBuilder,
   InteractionReplyOptions,
   MessagePayload,
-  ChatInputCommandInteraction,
-} from "discord.js";
+} from "./deps.ts";
+import { Readable } from "./deps.ts";
+
+export type ReplyFunc = (message: string) => Promise<void>;
 
 async function replyOrFollowup(
   interaction: ChatInputCommandInteraction,
@@ -33,4 +36,12 @@ export function fancyError(interaction: ChatInputCommandInteraction) {
   };
 }
 
-export type ReplyFunc = (message: string) => Promise<void>;
+export function execDlp(url: string) {
+  const command = new Deno.Command("./yt-dlp", {
+    args: [url, "-x", "--audio-format", "opus", "-o", "-"],
+    stdout: "piped",
+  });
+
+  // deno-lint-ignore no-explicit-any -- node's Readable doesn't work properly with generics
+  return Readable.fromWeb(command.spawn().stdout as any);
+}
