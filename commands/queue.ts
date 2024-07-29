@@ -16,14 +16,27 @@ export class QueueCommand implements DiscordCommand {
     interaction: ChatInputCommandInteraction<CacheType>,
     reply: ReplyFunc,
   ): Promise<void> {
-    const queue = this.players[interaction.guildId as string]?.getQueue() ?? [];
+    const player = this.players[interaction.guildId as string];
 
-    if (queue.length === 0) return reply("Queue is empty.");
+    if (!player) return reply("Not playing.");
 
-    const msg = queue
-      .map(({ url, title }, index) => `${index + 1}. [${title}](${url})\n`)
-      .reduce((prev, curr) => prev + curr);
+    const { currentlyPlaying, queue } = player;
 
-    return reply(msg);
+    const currentMessage = currentlyPlaying
+      ? `Currently playing: [${currentlyPlaying.title}](${currentlyPlaying.url})\n\n`
+      : "Nothing is being played.\n\n";
+    const queueMessage =
+      queue.length > 0
+        ? "Queue:\n" +
+          queue
+            .map(
+              ({ url, title }, index) => `${index + 1}. [${title}](${url})\n`,
+            )
+            .reduce((prev, curr) => prev + curr)
+        : "Queue is empty.";
+
+    const message = currentMessage + queueMessage;
+
+    return reply(message);
   }
 }

@@ -17,8 +17,8 @@ export type PlayerQueueEntry = {
 };
 
 export class Player {
-  private isPlaying: boolean = false;
-  private queue: Array<PlayerQueueEntry> = [];
+  private _currentlyPlaying: PlayerQueueEntry | undefined;
+  private _queue: Array<PlayerQueueEntry> = [];
   private connection?: VoiceConnection;
 
   constructor(
@@ -27,21 +27,22 @@ export class Player {
   ) {}
 
   update() {
-    if (this.isPlaying) {
+    if (this._currentlyPlaying) {
       log.debug("Bot is currenty playing, nothing to do");
       return;
     }
 
-    if (this.queue.length === 0) {
+    if (this._queue.length === 0) {
       log.debug("Queue empty, disconnecting");
       this.connection?.destroy();
       this.onStopped();
       return;
     }
 
-    const { url } = this.queue[0];
-    this.queue = this.queue.splice(1);
+    this._currentlyPlaying = this._queue[0];
+    this._queue = this._queue.splice(1);
 
+    const { url } = this._currentlyPlaying;
     const stream = createStream(url);
     const resource = createAudioResource(stream);
     const audioPlayer = createAudioPlayer({
@@ -64,8 +65,6 @@ export class Player {
     }
 
     log.debug(`Starting to play ${url}`);
-    this.isPlaying = true;
-
     this.connection.subscribe(audioPlayer);
     audioPlayer.play(resource);
 
@@ -81,16 +80,20 @@ export class Player {
   }
 
   play(entry: PlayerQueueEntry) {
-    this.queue.push(entry);
+    this._queue.push(entry);
     this.update();
   }
 
   skip() {
-    this.isPlaying = false;
+    this._currentlyPlaying = undefined;
     this.update();
   }
 
-  getQueue() {
-    return this.queue;
+  get currentlyPlaying(): Readonly<PlayerQueueEntry | undefined> {
+    return this._currentlyPlaying;
+  }
+
+  get queue(): ReadonlyArray<PlayerQueueEntry> {
+    return this._queue;
   }
 }

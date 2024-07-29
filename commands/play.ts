@@ -26,11 +26,7 @@ export class PlayCommand implements DiscordCommand {
     reply: ReplyFunc,
     error: ReplyFunc,
   ) {
-    if (!(interaction.member instanceof GuildMember)) {
-      return error("Not a guild member.");
-    }
-
-    const channel = interaction.member.voice?.channel;
+    const channel = (interaction.member as GuildMember).voice?.channel;
 
     if (!channel) {
       return error("You should be in a voice channel to use this command.");
