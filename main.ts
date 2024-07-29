@@ -6,10 +6,13 @@ import { makeCommands } from "./commands/index.ts";
 (async () => {
   log.setup({
     handlers: {
-      default: new log.ConsoleHandler("DEBUG", {
-        formatter: log.formatters.jsonFormatter,
-        useColors: false,
-      }),
+      default: new log.ConsoleHandler("DEBUG"),
+    },
+    loggers: {
+      default: {
+        level: "DEBUG",
+        handlers: ["default"],
+      },
     },
   });
 

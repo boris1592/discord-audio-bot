@@ -18,6 +18,7 @@ export function createStream(video: Video): Readable {
   const command = new Deno.Command("./yt-dlp", {
     args,
     stdout: "piped",
+    stderr: "null",
   });
 
   // Let's just hope yt-dlp will exit on its own at some point.
