@@ -17,6 +17,8 @@ export class PlayCommand implements DiscordCommand {
         .setName("url")
         .setDescription("YouTube video link")
         .setRequired(true)
+    ).addNumberOption((option) =>
+      option.setName("start").setDescription("Number of seconds to skip")
     ) as SlashCommandBuilder;
 
   constructor(private readonly players: Record<string, Player>) {}
@@ -32,14 +34,15 @@ export class PlayCommand implements DiscordCommand {
       return error("You should be in a voice channel to use this command.");
     }
 
-    const url = interaction.options.getString("url") as string;
-
     if (!this.players[channel.guildId]) {
       this.players[channel.guildId] = new Player(
         channel,
         () => delete this.players[channel.guildId],
       );
     }
+
+    const url = interaction.options.getString("url") as string;
+    const start = interaction.options.getNumber("start");
 
     await interaction.deferReply();
     const title = await loadTitle(url);
@@ -48,7 +51,7 @@ export class PlayCommand implements DiscordCommand {
       return error("Failed to load the video.");
     }
 
-    const video = { url, title };
+    const video = { url, title, start };
 
     this.players[channel.guildId].play(video);
     return reply(`Added ${format(video)} to the queue.`);

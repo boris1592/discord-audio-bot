@@ -37,8 +37,7 @@ export class Player {
     this._currentlyPlaying = this._queue[0];
     this._queue = this._queue.splice(1);
 
-    const { url } = this._currentlyPlaying;
-    const stream = createStream(url);
+    const stream = createStream(this._currentlyPlaying);
     const resource = createAudioResource(stream);
     const audioPlayer = createAudioPlayer({
       behaviors: {
@@ -59,7 +58,7 @@ export class Player {
       });
     }
 
-    log.debug(`Starting to play ${url}`);
+    log.debug(`Starting to play ${this._currentlyPlaying.url}`);
     this.connection.subscribe(audioPlayer);
     audioPlayer.play(resource);
 
