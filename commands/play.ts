@@ -55,8 +55,8 @@ export class PlayCommand implements DiscordCommand {
     }
 
     const video = { url, title, start };
-
     this.players[channel.guildId].play(video);
+
     return reply(`Added ${format(video)} to the queue.`);
   }
 }
