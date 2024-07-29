@@ -1,7 +1,7 @@
-import { Client, Events, GatewayIntentBits, REST, Routes } from "./deps.ts";
+import { REST, Client, GatewayIntentBits, Routes, Events } from "./deps.ts";
 import { log } from "./deps.ts";
+import { fancyError, fancyReply } from "./util/discord.ts";
 import { makeCommands } from "./commands/index.ts";
-import { fancyError, fancyReply } from "./util.ts";
 
 function buildDeps() {
   const rest = new REST().setToken(Deno.env.get("TOKEN") as string);
@@ -53,8 +53,8 @@ async function startBot() {
     const error = fancyError(interaction);
 
     if (!command) {
-      log.error(`No command named ${interaction.commandName} was found`);
-      await error("This command could not be found for some reason");
+      log.error(`No command named ${interaction.commandName} was found.`);
+      await error("This command could not be found for some reason.");
       return;
     }
 
@@ -62,7 +62,7 @@ async function startBot() {
       await command.execute(interaction, reply, error);
     } catch (err) {
       log.error(err);
-      await error("An unknown error occured while processing this command");
+      await error("An unknown error occured while processing this command.");
     }
   });
 

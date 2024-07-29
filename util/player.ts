@@ -6,14 +6,19 @@ import {
   NoSubscriberBehavior,
   VoiceConnection,
   VoiceConnectionStatus,
-} from "./deps.ts";
-import { VoiceBasedChannel } from "./deps.ts";
-import { log } from "./deps.ts";
-import { execDlp } from "./util.ts";
+  VoiceBasedChannel,
+} from "../deps.ts";
+import { log } from "../deps.ts";
+import { createStream } from "./yt-dlp.ts";
+
+export type PlayerQueueEntry = {
+  url: string;
+  title: string;
+};
 
 export class Player {
-  private isPlaying: boolean = false;
-  private queue: Array<string> = [];
+  private _currentlyPlaying: PlayerQueueEntry | undefined;
+  private _queue: Array<PlayerQueueEntry> = [];
   private connection?: VoiceConnection;
 
   constructor(
@@ -22,23 +27,24 @@ export class Player {
   ) {}
 
   update() {
-    if (this.isPlaying) {
+    if (this._currentlyPlaying) {
       log.debug("Bot is currenty playing, nothing to do");
       return;
     }
 
-    if (this.queue.length === 0) {
+    if (this._queue.length === 0) {
       log.debug("Queue empty, disconnecting");
       this.connection?.destroy();
       this.onStopped();
       return;
     }
 
-    const url = this.queue[0];
-    this.queue = this.queue.splice(1);
+    this._currentlyPlaying = this._queue[0];
+    this._queue = this._queue.splice(1);
 
-    const stdout = execDlp(url);
-    const resource = createAudioResource(stdout);
+    const { url } = this._currentlyPlaying;
+    const stream = createStream(url);
+    const resource = createAudioResource(stream);
     const audioPlayer = createAudioPlayer({
       behaviors: {
         noSubscriber: NoSubscriberBehavior.Pause,
@@ -59,35 +65,35 @@ export class Player {
     }
 
     log.debug(`Starting to play ${url}`);
-    this.isPlaying = true;
-
     this.connection.subscribe(audioPlayer);
     audioPlayer.play(resource);
 
     audioPlayer.on(AudioPlayerStatus.Idle, () => {
-      this.isPlaying = false;
-      this.update();
+      this.skip();
     });
 
     audioPlayer.on("error", (err) => {
       log.error(err);
       log.debug("Skipping because an error occured");
-      this.isPlaying = false;
-      this.update();
+      this.skip();
     });
   }
 
-  play(url: string) {
-    this.queue.push(url);
+  play(entry: PlayerQueueEntry) {
+    this._queue.push(entry);
     this.update();
   }
 
   skip() {
-    this.isPlaying = false;
+    this._currentlyPlaying = undefined;
     this.update();
   }
 
-  getQueue() {
-    return this.queue;
+  get currentlyPlaying(): Readonly<PlayerQueueEntry | undefined> {
+    return this._currentlyPlaying;
+  }
+
+  get queue(): ReadonlyArray<PlayerQueueEntry> {
+    return this._queue;
   }
 }
