@@ -18,7 +18,10 @@ export class PlayCommand implements DiscordCommand {
         .setDescription("YouTube video link")
         .setRequired(true)
     ).addNumberOption((option) =>
-      option.setName("start").setDescription("Number of seconds to skip")
+      option
+        .setName("start")
+        .setDescription("Number of seconds to skip")
+        .setRequired(false)
     ) as SlashCommandBuilder;
 
   constructor(private readonly players: Record<string, Player>) {}
