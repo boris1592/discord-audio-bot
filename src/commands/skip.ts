@@ -12,6 +12,6 @@ export class SkipCommand implements DiscordCommand {
 
   execute(interaction: ChatInputCommandInteraction, reply: ReplyFunc) {
     this.players[interaction.guildId as string]?.skip();
-    return reply(`Skipping...`);
+    return reply(`Skipping.`);
   }
 }

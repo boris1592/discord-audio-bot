@@ -9,11 +9,16 @@ import {
 } from "./deps.ts";
 import { VoiceBasedChannel } from "./deps.ts";
 import { log } from "./deps.ts";
-import { execDlp } from "./util.ts";
+import { createStream } from "./util.ts";
+
+export type PlayerQueueEntry = {
+  url: string;
+  title: string;
+};
 
 export class Player {
   private isPlaying: boolean = false;
-  private queue: Array<string> = [];
+  private queue: Array<PlayerQueueEntry> = [];
   private connection?: VoiceConnection;
 
   constructor(
@@ -34,11 +39,11 @@ export class Player {
       return;
     }
 
-    const url = this.queue[0];
+    const { url } = this.queue[0];
     this.queue = this.queue.splice(1);
 
-    const stdout = execDlp(url);
-    const resource = createAudioResource(stdout);
+    const stream = createStream(url);
+    const resource = createAudioResource(stream);
     const audioPlayer = createAudioPlayer({
       behaviors: {
         noSubscriber: NoSubscriberBehavior.Pause,
@@ -65,20 +70,18 @@ export class Player {
     audioPlayer.play(resource);
 
     audioPlayer.on(AudioPlayerStatus.Idle, () => {
-      this.isPlaying = false;
-      this.update();
+      this.skip();
     });
 
     audioPlayer.on("error", (err) => {
       log.error(err);
       log.debug("Skipping because an error occured");
-      this.isPlaying = false;
-      this.update();
+      this.skip();
     });
   }
 
-  play(url: string) {
-    this.queue.push(url);
+  play(entry: PlayerQueueEntry) {
+    this.queue.push(entry);
     this.update();
   }
 

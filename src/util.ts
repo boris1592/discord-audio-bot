@@ -19,7 +19,9 @@ async function replyOrFollowup(
   }
 }
 
-export function fancyReply(interaction: ChatInputCommandInteraction) {
+export function fancyReply(
+  interaction: ChatInputCommandInteraction,
+): ReplyFunc {
   return async (message: string) => {
     await replyOrFollowup(interaction, {
       embeds: [new EmbedBuilder().setColor("#2ecc71").setDescription(message)],
@@ -27,7 +29,9 @@ export function fancyReply(interaction: ChatInputCommandInteraction) {
   };
 }
 
-export function fancyError(interaction: ChatInputCommandInteraction) {
+export function fancyError(
+  interaction: ChatInputCommandInteraction,
+): ReplyFunc {
   return async (message: string) => {
     await replyOrFollowup(interaction, {
       embeds: [new EmbedBuilder().setColor("#e74c3c").setDescription(message)],
@@ -36,7 +40,7 @@ export function fancyError(interaction: ChatInputCommandInteraction) {
   };
 }
 
-export function execDlp(url: string) {
+export function createStream(url: string): Readable {
   const command = new Deno.Command("./yt-dlp", {
     args: [url, "-x", "--audio-format", "opus", "-o", "-"],
     stdout: "piped",
@@ -44,4 +48,15 @@ export function execDlp(url: string) {
 
   // deno-lint-ignore no-explicit-any -- node's Readable doesn't work properly with generics
   return Readable.fromWeb(command.spawn().stdout as any);
+}
+
+export async function loadTitle(url: string): Promise<string | undefined> {
+  const command = new Deno.Command("./yt-dlp", {
+    args: [url, "--dump-json"],
+  });
+  const { code, stdout } = await command.output();
+
+  if (code !== 0) return undefined;
+
+  return JSON.parse(new TextDecoder().decode(stdout)).title;
 }

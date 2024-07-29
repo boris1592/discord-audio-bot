@@ -18,11 +18,10 @@ export class QueueCommand implements DiscordCommand {
   ): Promise<void> {
     const queue = this.players[interaction.guildId as string]?.getQueue() ?? [];
 
-    if (queue.length === 0) return reply("Queue empty.");
+    if (queue.length === 0) return reply("Queue is empty.");
 
-    // TODO: Get info about a video from its URL
     const msg = queue
-      .map((url, index) => `${index + 1}. ${url}\n`)
+      .map(({ url, title }, index) => `${index + 1}. [${title}](${url})\n`)
       .reduce((prev, curr) => prev + curr);
 
     return reply(msg);
