@@ -1,19 +1,9 @@
-import { REST, Client, GatewayIntentBits, Routes, Events } from "./deps.ts";
+import { Client, Events, GatewayIntentBits, REST, Routes } from "./deps.ts";
 import { log } from "./deps.ts";
 import { fancyError, fancyReply } from "./util/discord.ts";
 import { makeCommands } from "./commands/index.ts";
 
-function buildDeps() {
-  const rest = new REST().setToken(Deno.env.get("TOKEN") as string);
-  const client = new Client({
-    intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildVoiceStates],
-  });
-  const commands = makeCommands();
-
-  return { rest, client, commands };
-}
-
-async function startBot() {
+(async () => {
   log.setup({
     handlers: {
       default: new log.ConsoleHandler("DEBUG", {
@@ -23,27 +13,27 @@ async function startBot() {
     },
   });
 
-  const { rest, client, commands } = buildDeps();
+  const commands = makeCommands();
+  const rest = new REST().setToken(Deno.env.get("TOKEN") as string);
+  const client = new Client({
+    intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildVoiceStates],
+  });
 
   try {
     log.info(`Started refreshing ${commands.length} (/) commands`);
 
-    const data = await rest.put(
+    const { length } = (await rest.put(
       Routes.applicationCommands(Deno.env.get("CLIENT_ID") as string),
       { body: commands.map(({ info }) => info.toJSON()) },
-    );
+    )) as { length: number };
 
-    log.info(
-      `Successfully reloaded ${
-        (data as { length: number }).length
-      } (/) commands`,
-    );
+    log.info(`Successfully reloaded ${length} (/) commands`);
   } catch (error) {
     log.error(error);
     return;
   }
 
-  client.on(Events.InteractionCreate, async (interaction) => {
+  client.on(Events.InteractionCreate, (interaction) => {
     if (!interaction.isChatInputCommand()) return;
 
     const command = commands.find(
@@ -54,15 +44,14 @@ async function startBot() {
 
     if (!command) {
       log.error(`No command named ${interaction.commandName} was found.`);
-      await error("This command could not be found for some reason.");
-      return;
+      return error("This command could not be found for some reason.");
     }
 
     try {
-      await command.execute(interaction, reply, error);
+      return command.execute(interaction, reply, error);
     } catch (err) {
       log.error(err);
-      await error("An unknown error occured while processing this command.");
+      return error("An unknown error occured while processing this command.");
     }
   });
 
@@ -71,6 +60,4 @@ async function startBot() {
   });
 
   client.login(Deno.env.get("TOKEN"));
-}
-
-startBot();
+})();

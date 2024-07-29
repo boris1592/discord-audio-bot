@@ -1,5 +1,14 @@
 import { Readable } from "../deps.ts";
 
+export type Video = {
+  url: string;
+  title: string;
+};
+
+export function format(video: Video): string {
+  return `[${video.title}](${video.url})`;
+}
+
 export function createStream(url: string): Readable {
   const command = new Deno.Command("./yt-dlp", {
     args: [url, "-x", "--audio-format", "opus", "-o", "-"],

@@ -5,7 +5,7 @@ import {
 } from "../deps.ts";
 import { DiscordCommand } from "./command.ts";
 import { ReplyFunc } from "../util/discord.ts";
-import { loadTitle } from "../util/yt-dlp.ts";
+import { format, loadTitle } from "../util/video.ts";
 import { Player } from "../util/player.ts";
 
 export class PlayCommand implements DiscordCommand {
@@ -16,7 +16,7 @@ export class PlayCommand implements DiscordCommand {
       option
         .setName("url")
         .setDescription("YouTube video link")
-        .setRequired(true),
+        .setRequired(true)
     ) as SlashCommandBuilder;
 
   constructor(private readonly players: Record<string, Player>) {}
@@ -48,7 +48,9 @@ export class PlayCommand implements DiscordCommand {
       return error("Failed to load the video.");
     }
 
-    this.players[channel.guildId].play({ url, title });
-    return reply(`Added [${title}](${url}) to the queue.`);
+    const video = { url, title };
+
+    this.players[channel.guildId].play(video);
+    return reply(`Added ${format(video)} to the queue.`);
   }
 }

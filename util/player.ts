@@ -4,21 +4,16 @@ import {
   createAudioResource,
   joinVoiceChannel,
   NoSubscriberBehavior,
+  VoiceBasedChannel,
   VoiceConnection,
   VoiceConnectionStatus,
-  VoiceBasedChannel,
 } from "../deps.ts";
 import { log } from "../deps.ts";
-import { createStream } from "./yt-dlp.ts";
-
-export type PlayerQueueEntry = {
-  url: string;
-  title: string;
-};
+import { createStream, type Video } from "./video.ts";
 
 export class Player {
-  private _currentlyPlaying: PlayerQueueEntry | undefined;
-  private _queue: Array<PlayerQueueEntry> = [];
+  private _currentlyPlaying: Video | undefined;
+  private _queue: Array<Video> = [];
   private connection?: VoiceConnection;
 
   constructor(
@@ -79,7 +74,7 @@ export class Player {
     });
   }
 
-  play(entry: PlayerQueueEntry) {
+  play(entry: Video) {
     this._queue.push(entry);
     this.update();
   }
@@ -89,11 +84,11 @@ export class Player {
     this.update();
   }
 
-  get currentlyPlaying(): Readonly<PlayerQueueEntry | undefined> {
+  get currentlyPlaying(): Readonly<Video | undefined> {
     return this._currentlyPlaying;
   }
 
-  get queue(): ReadonlyArray<PlayerQueueEntry> {
+  get queue(): ReadonlyArray<Video> {
     return this._queue;
   }
 }
