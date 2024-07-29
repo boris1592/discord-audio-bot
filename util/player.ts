@@ -12,13 +12,13 @@ import { log } from "../deps.ts";
 import { createStream, type Video } from "./video.ts";
 
 export class Player {
-  private _currentlyPlaying: Video | undefined;
+  private _currentlyPlaying: { video: Video; stop: () => void } | undefined;
   private _queue: Array<Video> = [];
   private connection?: VoiceConnection;
 
   constructor(
     private readonly channel: VoiceBasedChannel,
-    private readonly onStopped: () => void,
+    private readonly onExited: () => void,
   ) {}
 
   update() {
@@ -30,14 +30,16 @@ export class Player {
     if (this._queue.length === 0) {
       log.debug("Queue empty, disconnecting");
       this.connection?.destroy();
-      this.onStopped();
+      this.onExited();
       return;
     }
 
-    this._currentlyPlaying = this._queue[0];
+    const video = this._queue[0];
     this._queue = this._queue.splice(1);
 
-    const stream = createStream(this._currentlyPlaying);
+    const { stream, stop } = createStream(video);
+    this._currentlyPlaying = { video, stop };
+
     const resource = createAudioResource(stream);
     const audioPlayer = createAudioPlayer({
       behaviors: {
@@ -54,11 +56,12 @@ export class Player {
 
       this.connection.on(VoiceConnectionStatus.Disconnected, () => {
         log.info("Disconnected from the channel");
-        this.onStopped();
+        this._currentlyPlaying?.stop();
+        this.onExited();
       });
     }
 
-    log.debug(`Starting to play ${this._currentlyPlaying.url}`);
+    log.debug(`Starting to play ${this._currentlyPlaying.video.url}`);
     this.connection.subscribe(audioPlayer);
     audioPlayer.play(resource);
 
@@ -79,12 +82,13 @@ export class Player {
   }
 
   skip() {
+    this._currentlyPlaying?.stop();
     this._currentlyPlaying = undefined;
     this.update();
   }
 
   get currentlyPlaying(): Readonly<Video | undefined> {
-    return this._currentlyPlaying;
+    return this._currentlyPlaying?.video;
   }
 
   get queue(): ReadonlyArray<Video> {
