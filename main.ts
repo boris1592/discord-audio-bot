@@ -1,7 +1,7 @@
-import { Client, Events, GatewayIntentBits, REST, Routes } from "./deps.ts";
+import { REST, Client, GatewayIntentBits, Routes, Events } from "./deps.ts";
 import { log } from "./deps.ts";
+import { fancyError, fancyReply } from "./util/discord.ts";
 import { makeCommands } from "./commands/index.ts";
-import { fancyError, fancyReply } from "./util.ts";
 
 function buildDeps() {
   const rest = new REST().setToken(Deno.env.get("TOKEN") as string);

@@ -1,7 +1,7 @@
 import { ChatInputCommandInteraction, SlashCommandBuilder } from "../deps.ts";
 import { DiscordCommand } from "./command.ts";
-import { ReplyFunc } from "../util.ts";
-import { Player } from "../player.ts";
+import { ReplyFunc } from "../util/discord.ts";
+import { Player } from "../util/player.ts";
 
 export class SkipCommand implements DiscordCommand {
   info = new SlashCommandBuilder()

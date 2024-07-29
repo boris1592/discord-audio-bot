@@ -6,10 +6,10 @@ import {
   NoSubscriberBehavior,
   VoiceConnection,
   VoiceConnectionStatus,
-} from "./deps.ts";
-import { VoiceBasedChannel } from "./deps.ts";
-import { log } from "./deps.ts";
-import { createStream } from "./util.ts";
+  VoiceBasedChannel,
+} from "../deps.ts";
+import { log } from "../deps.ts";
+import { createStream } from "./yt-dlp.ts";
 
 export type PlayerQueueEntry = {
   url: string;

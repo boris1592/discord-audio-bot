@@ -4,8 +4,9 @@ import {
   SlashCommandBuilder,
 } from "../deps.ts";
 import { DiscordCommand } from "./command.ts";
-import { loadTitle, ReplyFunc } from "../util.ts";
-import { Player } from "../player.ts";
+import { ReplyFunc } from "../util/discord.ts";
+import { loadTitle } from "../util/yt-dlp.ts";
+import { Player } from "../util/player.ts";
 
 export class PlayCommand implements DiscordCommand {
   info = new SlashCommandBuilder()

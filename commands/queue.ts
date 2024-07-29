@@ -4,8 +4,8 @@ import {
   SlashCommandBuilder,
 } from "../deps.ts";
 import { DiscordCommand } from "./command.ts";
-import { Player } from "../player.ts";
-import { ReplyFunc } from "../util.ts";
+import { Player } from "../util/player.ts";
+import { ReplyFunc } from "../util/discord.ts";
 
 export class QueueCommand implements DiscordCommand {
   info = new SlashCommandBuilder().setName("queue").setDescription("Get queue");
