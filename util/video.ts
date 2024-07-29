@@ -3,7 +3,6 @@ import { Readable } from "../deps.ts";
 export type Video = {
   url: string;
   title: string;
-  start: number | null;
 };
 
 export function format(video: Video): string {
@@ -13,12 +12,8 @@ export function format(video: Video): string {
 export function createStream(
   video: Video,
 ): { stream: Readable; stop: () => void } {
-  const args = [video.url]
-    .concat(video.start ? ["--download-sections", `*${video.start}-inf`] : [])
-    .concat(["-x", "--audio-format", "opus", "-o", "-"]);
-
   const command = new Deno.Command("./yt-dlp", {
-    args,
+    args: [video.url, "-x", "--audio-format", "opus", "-o", "-"],
     stdout: "piped",
   });
   const process = command.spawn();

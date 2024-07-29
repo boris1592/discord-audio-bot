@@ -9,7 +9,9 @@ import { ReplyFunc } from "../util/discord.ts";
 import { format } from "../util/video.ts";
 
 export class QueueCommand implements DiscordCommand {
-  info = new SlashCommandBuilder().setName("queue").setDescription("Get queue");
+  info = new SlashCommandBuilder()
+    .setName("queue")
+    .setDescription("Get queue");
 
   constructor(private readonly players: Record<string, Player>) {}
 
@@ -32,7 +34,6 @@ export class QueueCommand implements DiscordCommand {
           .map((video, index) => `${index + 1}. ${format(video)}\n`)
           .reduce((prev, curr) => prev + curr)
       : "Queue is empty.";
-
     const message = currentMessage + queueMessage;
 
     return reply(message);

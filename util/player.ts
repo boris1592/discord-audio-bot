@@ -21,7 +21,7 @@ export class Player {
     private readonly onExited: () => void,
   ) {}
 
-  update() {
+  private update() {
     if (this._currentlyPlaying) {
       log.debug("Bot is currenty playing, nothing to do");
       return;
