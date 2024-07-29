@@ -3,10 +3,16 @@ import { DiscordCommand } from "./command.ts";
 import { ReplyFunc } from "../util/discord.ts";
 import { Player } from "../util/player.ts";
 
-export class SkipCommand implements DiscordCommand {
+export class JumpCommand implements DiscordCommand {
   info = new SlashCommandBuilder()
-    .setName("skip")
-    .setDescription("Skip to the next");
+    .setName("jump")
+    .setDescription("Jump to any point of currently played video")
+    .addNumberOption((option) =>
+      option
+        .setName("to")
+        .setDescription("Time in seconds to jump to")
+        .setRequired(true)
+    ) as SlashCommandBuilder;
 
   constructor(private readonly players: Record<string, Player>) {}
 
@@ -15,7 +21,8 @@ export class SkipCommand implements DiscordCommand {
 
     if (!player) return reply("Not playing.");
 
-    player.skip();
-    return reply("Skipped.");
+    const to = interaction.options.getNumber("to") as number;
+    player.jump(to);
+    return reply("Jumped.");
   }
 }
