@@ -1,21 +1,26 @@
 use crate::{
     player::{Player, QueueEntry},
-    util::extract_guild_and_channel,
+    util::{extract_guild_and_channel, reply_error, reply_ok},
 };
 use crate::{Context, Error};
 use std::sync::Arc;
 
 #[poise::command(slash_command)]
-pub async fn play(ctx: Context<'_>, #[description = "link"] link: String) -> Result<(), Error> {
-    // TODO: Just return Ok(()) so logs aren't polluted
-    let (guild_id, channel_id) =
-        extract_guild_and_channel(&ctx).ok_or("unable to get guild id or channel id")?;
+pub async fn play(
+    ctx: Context<'_>,
+    #[description = "YouTube video link"] link: String,
+) -> Result<(), Error> {
+    let (guild_id, channel_id) = match extract_guild_and_channel(&ctx).await? {
+        Some(tuple) => tuple,
+        None => return Ok(()),
+    };
 
     let manager = songbird::get(ctx.serenity_context())
         .await
         .ok_or("unable to get songbird")?;
 
     let mut players = ctx.data().players.lock().await;
+
     let player = match players.get(&guild_id) {
         Some(player) => player.clone(),
         None => {
@@ -31,10 +36,20 @@ pub async fn play(ctx: Context<'_>, #[description = "link"] link: String) -> Res
     };
 
     ctx.defer().await?;
-    // TODO: Properly handle possible errors
-    let entry = QueueEntry::new(link.into(), ctx.data().http_client.clone()).await?;
-    player.play(entry).await;
 
-    ctx.say("starting to play").await?;
+    let entry = match QueueEntry::new(link.into(), ctx.data().http_client.clone()).await {
+        Ok(entry) => entry,
+        Err(_) => {
+            reply_error(&ctx, "Unable to load the video.").await?;
+            return Ok(());
+        }
+    };
+    player.play(entry.clone()).await;
+
+    reply_ok(
+        &ctx,
+        &format!("Added [{}]({}) to the queue.", entry.name, entry.url),
+    )
+    .await?;
     Ok(())
 }
