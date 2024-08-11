@@ -1,9 +1,0 @@
-.git/
-.dockerignore
-.env
-.gitignore
-compose.yml
-Dockerfile
-LICENSE
-README.md
-yt-dlp
