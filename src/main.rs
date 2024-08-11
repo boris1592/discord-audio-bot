@@ -1,5 +1,5 @@
 use crate::{
-    commands::{play::play, skip::skip},
+    commands::{play::play, queue::queue, skip::skip},
     player::Player,
 };
 use poise::serenity_prelude as serenity;
@@ -32,7 +32,7 @@ async fn main() {
 
     let framework = poise::Framework::builder()
         .options(poise::FrameworkOptions {
-            commands: vec![play(), skip()],
+            commands: vec![play(), skip(), queue()],
             ..Default::default()
         })
         .setup(|ctx, _ready, framework| {

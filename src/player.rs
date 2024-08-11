@@ -21,6 +21,10 @@ impl QueueEntry {
         let name = ytdl.aux_metadata().await?.title.unwrap().into();
         Ok(Self { url, name })
     }
+
+    pub fn format(&self) -> String {
+        format!("[{}]({})", self.name, self.url)
+    }
 }
 
 pub struct Player {
