@@ -1,42 +1,25 @@
+use crate::{
+    commands::{play::play, skip::skip},
+    player::Player,
+};
 use poise::serenity_prelude as serenity;
 use reqwest::Client as HttpClient;
-use songbird::{input::YoutubeDl, SerenityInit};
-use std::env;
+use songbird::SerenityInit;
+use std::{collections::HashMap, env, error, sync::Arc};
+use tokio::sync::Mutex;
+
+mod commands;
+mod handlers;
+mod player;
+mod util;
 
 struct Data {
     http_client: HttpClient,
+    players: Mutex<HashMap<serenity::GuildId, Arc<Player>>>,
 }
 
-type Error = Box<dyn std::error::Error + Send + Sync>;
+type Error = Box<dyn error::Error + Send + Sync>;
 type Context<'a> = poise::Context<'a, Data, Error>;
-
-#[poise::command(slash_command)]
-async fn play(ctx: Context<'_>, #[description = "link"] link: String) -> Result<(), Error> {
-    let (guild_id, channel_id) = {
-        let guild = ctx.guild().ok_or("can only be used in guilds")?;
-        let channel_id = guild
-            .voice_states
-            .get(&ctx.author().id)
-            .and_then(|voice_state| voice_state.channel_id)
-            .ok_or("should be in a voice channel")?;
-
-        (guild.id, channel_id)
-    };
-
-    let manager = songbird::get(ctx.serenity_context())
-        .await
-        .ok_or("manager couldn't be found")?;
-
-    let handler = manager.join(guild_id, channel_id).await?;
-    let mut handler = handler.lock().await;
-
-    let src = YoutubeDl::new(ctx.data().http_client.clone(), link);
-    let track = handler.play_input(src.into());
-
-    ctx.say("starting to play").await?;
-
-    Ok(())
-}
 
 #[tokio::main]
 async fn main() {
@@ -49,7 +32,7 @@ async fn main() {
 
     let framework = poise::Framework::builder()
         .options(poise::FrameworkOptions {
-            commands: vec![play()],
+            commands: vec![play(), skip()],
             ..Default::default()
         })
         .setup(|ctx, _ready, framework| {
@@ -57,6 +40,7 @@ async fn main() {
                 poise::builtins::register_globally(ctx, &framework.options().commands).await?;
                 Ok(Data {
                     http_client: HttpClient::new(),
+                    players: Mutex::default(),
                 })
             })
         })
