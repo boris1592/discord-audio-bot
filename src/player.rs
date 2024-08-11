@@ -1,10 +1,10 @@
-use crate::handlers::TrackEndHandler;
+use crate::handlers::{DisconnectHandler, TrackEndHandler};
 use poise::serenity_prelude as serenity;
 use reqwest::Client as HttpClient;
 use songbird::{
     input::{AuxMetadataError, Compose, YoutubeDl},
     tracks::TrackHandle,
-    Event, Songbird, TrackEvent,
+    CoreEvent, Event, Songbird, TrackEvent,
 };
 use std::{collections::VecDeque, sync::Arc};
 use tokio::sync::Mutex;
@@ -65,7 +65,7 @@ impl Player {
         let next = match queue.pop_front() {
             Some(next) => next,
             None => {
-                let _ = self.manager.remove(self.guild_id).await;
+                self.manager.remove(self.guild_id).await.unwrap();
                 return;
             }
         };
@@ -74,11 +74,20 @@ impl Player {
         let call = self.manager.get(self.guild_id);
         let call = match call {
             Some(call) => call,
-            None => self
-                .manager
-                .join(self.guild_id, self.channel_id)
-                .await
-                .unwrap(),
+            None => {
+                let call = self
+                    .manager
+                    .join(self.guild_id, self.channel_id)
+                    .await
+                    .unwrap();
+
+                let handler = DisconnectHandler::new(self.clone());
+                call.lock()
+                    .await
+                    .add_global_event(Event::Core(CoreEvent::DriverDisconnect), handler);
+
+                call
+            }
         };
 
         let mut call = call.lock().await;
@@ -95,6 +104,11 @@ impl Player {
         let _ = current.replace((next, track));
     }
 
+    pub async fn play(self: Arc<Self>, entry: QueueEntry) {
+        self.queue.lock().await.push_back(entry);
+        self.update().await;
+    }
+
     pub async fn skip(&self) {
         if let Some(track) = self.current.lock().await.as_ref() {
             track.1.stop().unwrap();
@@ -107,13 +121,17 @@ impl Player {
         (entry, queue)
     }
 
-    pub async fn remove_and_update(self: Arc<Self>) {
+    pub async fn remove_current(self: Arc<Self>) {
         let _ = self.current.lock().await.take();
         self.update().await;
     }
 
-    pub async fn play(self: Arc<Self>, entry: QueueEntry) {
-        self.queue.lock().await.push_back(entry);
-        self.update().await;
+    pub async fn clear(self: Arc<Self>) {
+        let mut current = self.current.lock().await;
+        let mut queue = self.queue.lock().await;
+
+        self.manager.remove(self.guild_id).await.unwrap();
+        let _ = current.take();
+        queue.clear();
     }
 }

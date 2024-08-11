@@ -17,8 +17,25 @@ impl TrackEndHandler {
 #[serenity::async_trait]
 impl EventHandler for TrackEndHandler {
     async fn act(&self, _: &EventContext<'_>) -> Option<Event> {
-        log::debug!("asdf");
-        self.player.clone().remove_and_update().await;
+        self.player.clone().remove_current().await;
+        None
+    }
+}
+
+pub struct DisconnectHandler {
+    player: Arc<Player>,
+}
+
+impl DisconnectHandler {
+    pub fn new(player: Arc<Player>) -> Self {
+        Self { player }
+    }
+}
+
+#[serenity::async_trait]
+impl EventHandler for DisconnectHandler {
+    async fn act(&self, _: &EventContext<'_>) -> Option<Event> {
+        self.player.clone().clear().await;
         None
     }
 }
