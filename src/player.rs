@@ -65,7 +65,7 @@ impl Player {
         let next = match queue.pop_front() {
             Some(next) => next,
             None => {
-                self.manager.remove(self.guild_id).await.unwrap();
+                let _ = self.manager.remove(self.guild_id).await;
                 return;
             }
         };
@@ -130,7 +130,7 @@ impl Player {
         let mut current = self.current.lock().await;
         let mut queue = self.queue.lock().await;
 
-        self.manager.remove(self.guild_id).await.unwrap();
+        let _ = self.manager.remove(self.guild_id).await;
         let _ = current.take();
         queue.clear();
     }
