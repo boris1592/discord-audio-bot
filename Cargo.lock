@@ -564,6 +564,21 @@ dependencies = [
 ]
 
 [[package]]
+name = "discord-audio-bot"
+version = "0.1.0"
+dependencies = [
+ "dotenv",
+ "env_logger",
+ "log",
+ "poise",
+ "reqwest",
+ "serenity",
+ "songbird",
+ "symphonia",
+ "tokio",
+]
+
+[[package]]
 name = "discortp"
 version = "0.6.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -707,21 +722,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "99f31122ab0445ff8cee420b805f24e07683073815de1dd276ee7d588d301700"
 dependencies = [
  "hashmap_derive",
-]
-
-[[package]]
-name = "funny-discord-bot"
-version = "0.1.0"
-dependencies = [
- "dotenv",
- "env_logger",
- "log",
- "poise",
- "reqwest",
- "serenity",
- "songbird",
- "symphonia",
- "tokio",
 ]
 
 [[package]]
