@@ -4,7 +4,7 @@ WORKDIR discord-bot
 COPY . .
 RUN cargo install --path .
 
-FROM debian:12.6
+FROM ubuntu:24.10
 RUN apt update && apt install -y ffmpeg yt-dlp
 WORKDIR discord-bot
 COPY --from=builder /usr/local/cargo/bin/discord-audio-bot ./
