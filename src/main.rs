@@ -19,7 +19,7 @@ struct Data {
 }
 
 type Error = Box<dyn error::Error + Send + Sync>;
-type Context<'a> = poise::Context<'a, Data, Error>;
+type Context<'a> = poise::Context<'a, Arc<Data>, Error>;
 
 #[tokio::main]
 async fn main() {
@@ -38,10 +38,10 @@ async fn main() {
         .setup(|ctx, _ready, framework| {
             Box::pin(async move {
                 poise::builtins::register_globally(ctx, &framework.options().commands).await?;
-                Ok(Data {
+                Ok(Arc::new(Data {
                     http_client: HttpClient::new(),
                     players: Mutex::default(),
-                })
+                }))
             })
         })
         .build();

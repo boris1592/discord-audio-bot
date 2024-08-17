@@ -29,7 +29,7 @@ pub async fn play(
                     manager,
                     guild_id,
                     channel_id,
-                    ctx.data().http_client.clone(),
+                    ctx.data().clone(),
                 ));
                 players.insert(guild_id, player.clone());
                 player
