@@ -2,7 +2,7 @@ FROM rust:1.80 AS builder
 RUN apt update && apt install -y libopus-dev
 WORKDIR discord-bot
 COPY . .
-RUN cargo install --path .
+RUN cargo install --locked --path .
 
 FROM ubuntu:24.10
 RUN apt update && apt install -y ffmpeg yt-dlp
