@@ -9,7 +9,7 @@ use std::{collections::HashMap, env, error, sync::Arc};
 use tokio::sync::Mutex;
 
 mod commands;
-mod handlers;
+mod handler;
 mod player;
 mod util;
 

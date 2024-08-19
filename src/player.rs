@@ -1,7 +1,4 @@
-use crate::{
-    handlers::{DisconnectHandler, TrackEndHandler},
-    Data,
-};
+use crate::{handler::CustomEventHandler, Data};
 use poise::serenity_prelude as serenity;
 use reqwest::Client as HttpClient;
 use songbird::{
@@ -9,7 +6,7 @@ use songbird::{
     tracks::TrackHandle,
     CoreEvent, Event, Songbird, TrackEvent,
 };
-use std::{collections::VecDeque, sync::Arc};
+use std::{collections::VecDeque, future::Future, sync::Arc};
 use tokio::sync::Mutex;
 
 #[derive(Clone)]
@@ -61,7 +58,7 @@ impl Player {
         }
     }
 
-    pub async fn play(self: Arc<Self>, entry: QueueEntry) {
+    pub async fn play(self: &Arc<Self>, entry: QueueEntry) {
         self.queue.lock().await.queue.push_back(entry);
         self.update().await;
     }
@@ -79,19 +76,7 @@ impl Player {
         (entry, queue)
     }
 
-    pub async fn remove_current(self: Arc<Self>) {
-        let _ = self.queue.lock().await.current.take();
-        self.update().await;
-    }
-
-    pub async fn clear(&self) {
-        let mut queue = self.queue.lock().await;
-        let _ = queue.current.take();
-        queue.queue.clear();
-        self.remove().await;
-    }
-
-    async fn update(self: Arc<Self>) {
+    async fn update(self: &Arc<Self>) {
         let mut queue = self.queue.lock().await;
 
         if queue.current.is_some() {
@@ -117,10 +102,26 @@ impl Player {
                     .await
                     .unwrap();
 
-                call.lock().await.add_global_event(
-                    Event::Core(CoreEvent::DriverDisconnect),
-                    DisconnectHandler::new(self.clone()),
-                );
+                // `handler` has to be 'static therefore the closure must be 'static
+                // therefore it cannot borrow anything that is not 'static (including `self`),
+                // so here we go, clonning the pointer for every call... Though this
+                // particular closure won't be called more than once, but the compiler
+                // does not know about this.
+                let clone = self.clone();
+                let handler = CustomEventHandler::new(move || {
+                    let player = clone.clone();
+
+                    async move {
+                        let mut queue = player.queue.lock().await;
+                        let _ = queue.current.take();
+                        queue.queue.clear();
+                        player.remove().await;
+                    }
+                });
+
+                call.lock()
+                    .await
+                    .add_global_event(Event::Core(CoreEvent::DriverDisconnect), handler);
 
                 call
             }
@@ -129,18 +130,17 @@ impl Player {
         let mut call = call.lock().await;
         let track = call.play_input(source.into());
 
+        // As mentioned above, we cannot just borrow `self` in the closure since it
+        // must be 'static.
+        let clone = self.clone();
+        let handler = CustomEventHandler::new(move || clone.clone().remove_current());
+
         track
-            .add_event(
-                Event::Track(TrackEvent::End),
-                TrackEndHandler::new(self.clone()),
-            )
+            .add_event(Event::Track(TrackEvent::End), handler.clone())
             .unwrap();
 
         track
-            .add_event(
-                Event::Track(TrackEvent::Error),
-                TrackEndHandler::new(self.clone()),
-            )
+            .add_event(Event::Track(TrackEvent::Error), handler)
             .unwrap();
 
         let _ = queue.current.replace((next, track));
@@ -150,5 +150,14 @@ impl Player {
         let mut players = self.bot_data.players.lock().await;
         let _ = self.manager.remove(self.guild_id).await;
         players.remove(&self.guild_id);
+    }
+
+    // For some reason normal `async fn` syntax doesn't produce
+    // a `Future` that is `Send`, so here we are...
+    fn remove_current(self: Arc<Self>) -> impl Future<Output = ()> + Send {
+        async move {
+            let _ = self.queue.lock().await.current.take();
+            self.update().await;
+        }
     }
 }
