@@ -3,7 +3,6 @@ use poise::serenity_prelude as serenity;
 use songbird::{Event, EventContext, EventHandler};
 use std::sync::Arc;
 
-#[derive(Clone)]
 pub struct TrackEndHandler {
     player: Arc<Player>,
 }

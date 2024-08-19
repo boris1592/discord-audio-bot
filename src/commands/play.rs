@@ -26,9 +26,9 @@ pub async fn play(
             Some(player) => player.clone(),
             None => {
                 let player = Arc::new(Player::new(
-                    manager,
                     guild_id,
                     channel_id,
+                    manager,
                     ctx.data().clone(),
                 ));
                 players.insert(guild_id, player.clone());
