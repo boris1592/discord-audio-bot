@@ -30,49 +30,82 @@ impl QueueEntry {
     }
 }
 
+#[derive(Default)]
+struct Queue {
+    current: Option<(QueueEntry, TrackHandle)>,
+    queue: VecDeque<QueueEntry>,
+}
+
 pub struct Player {
     guild_id: serenity::GuildId,
     channel_id: serenity::ChannelId,
-    manager: Arc<Songbird>,
-    data: Arc<Data>,
 
-    current: Mutex<Option<(QueueEntry, TrackHandle)>>,
-    queue: Mutex<VecDeque<QueueEntry>>,
+    manager: Arc<Songbird>,
+    bot_data: Arc<Data>,
+    queue: Mutex<Queue>,
 }
 
 impl Player {
     pub fn new(
-        manager: Arc<Songbird>,
         guild_id: serenity::GuildId,
         channel_id: serenity::ChannelId,
-        data: Arc<Data>,
+        manager: Arc<Songbird>,
+        bot_data: Arc<Data>,
     ) -> Self {
         Self {
             guild_id,
             channel_id,
             manager,
-            data,
-            current: Mutex::new(None),
+            bot_data,
             queue: Mutex::default(),
         }
     }
 
+    pub async fn play(self: Arc<Self>, entry: QueueEntry) {
+        self.queue.lock().await.queue.push_back(entry);
+        self.update().await;
+    }
+
+    pub async fn skip(&self) {
+        if let Some(track) = self.queue.lock().await.current.as_ref() {
+            track.1.stop().unwrap();
+        }
+    }
+
+    pub async fn get_queue(&self) -> (Option<QueueEntry>, Vec<QueueEntry>) {
+        let queue = self.queue.lock().await;
+        let entry = queue.current.clone().map(|(entry, _)| entry);
+        let queue = queue.queue.clone().into();
+        (entry, queue)
+    }
+
+    pub async fn remove_current(self: Arc<Self>) {
+        let _ = self.queue.lock().await.current.take();
+        self.update().await;
+    }
+
+    pub async fn clear(&self) {
+        let mut queue = self.queue.lock().await;
+        let _ = queue.current.take();
+        queue.queue.clear();
+        self.remove().await;
+    }
+
     async fn update(self: Arc<Self>) {
-        let mut current = self.current.lock().await;
         let mut queue = self.queue.lock().await;
 
-        if current.is_some() {
+        if queue.current.is_some() {
             return;
         }
 
-        let next = match queue.pop_front() {
+        let next = match queue.queue.pop_front() {
             Some(next) => next,
             None => {
                 self.remove().await;
                 return;
             }
         };
-        let source = YoutubeDl::new(self.data.http_client.clone(), next.url.clone().into());
+        let source = YoutubeDl::new(self.bot_data.http_client.clone(), next.url.clone().into());
 
         let call = self.manager.get(self.guild_id);
         let call = match call {
@@ -84,10 +117,10 @@ impl Player {
                     .await
                     .unwrap();
 
-                let handler = DisconnectHandler::new(self.clone());
-                call.lock()
-                    .await
-                    .add_global_event(Event::Core(CoreEvent::DriverDisconnect), handler);
+                call.lock().await.add_global_event(
+                    Event::Core(CoreEvent::DriverDisconnect),
+                    DisconnectHandler::new(self.clone()),
+                );
 
                 call
             }
@@ -96,51 +129,26 @@ impl Player {
         let mut call = call.lock().await;
         let track = call.play_input(source.into());
 
-        let handler = TrackEndHandler::new(self.clone());
         track
-            .add_event(Event::Track(TrackEvent::End), handler.clone())
-            .unwrap();
-        track
-            .add_event(Event::Track(TrackEvent::Error), handler)
+            .add_event(
+                Event::Track(TrackEvent::End),
+                TrackEndHandler::new(self.clone()),
+            )
             .unwrap();
 
-        let _ = current.replace((next, track));
+        track
+            .add_event(
+                Event::Track(TrackEvent::Error),
+                TrackEndHandler::new(self.clone()),
+            )
+            .unwrap();
+
+        let _ = queue.current.replace((next, track));
     }
 
     async fn remove(&self) {
-        let mut players = self.data.players.lock().await;
+        let mut players = self.bot_data.players.lock().await;
         let _ = self.manager.remove(self.guild_id).await;
         players.remove(&self.guild_id);
-    }
-
-    pub async fn play(self: Arc<Self>, entry: QueueEntry) {
-        self.queue.lock().await.push_back(entry);
-        self.update().await;
-    }
-
-    pub async fn skip(&self) {
-        if let Some(track) = self.current.lock().await.as_ref() {
-            track.1.stop().unwrap();
-        }
-    }
-
-    pub async fn get_queue(&self) -> (Option<QueueEntry>, Vec<QueueEntry>) {
-        let entry = self.current.lock().await.clone().map(|(entry, _)| entry);
-        let queue = self.queue.lock().await.clone().into();
-        (entry, queue)
-    }
-
-    pub async fn remove_current(self: Arc<Self>) {
-        let _ = self.current.lock().await.take();
-        self.update().await;
-    }
-
-    pub async fn clear(&self) {
-        let mut current = self.current.lock().await;
-        let mut queue = self.queue.lock().await;
-
-        let _ = current.take();
-        queue.clear();
-        self.remove().await;
     }
 }
