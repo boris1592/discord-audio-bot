@@ -10,12 +10,7 @@ pub async fn queue(ctx: Context<'_>) -> Result<(), Error> {
         Some(guild_id) => guild_id,
         None => return Ok(()),
     };
-    let player = {
-        let players = ctx.data().players.lock().await;
-        players.get(&guild_id).map(|player| player.clone())
-    };
-
-    let queue = match player {
+    let queue = match ctx.data().players.lock().await.get(&guild_id) {
         Some(player) => player.get_queue().await,
         None => Queue::default(),
     };
