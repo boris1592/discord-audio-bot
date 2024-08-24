@@ -132,9 +132,3 @@ impl Player {
         }
     }
 }
-
-impl Drop for Player {
-    fn drop(&mut self) {
-        println!("dropped")
-    }
-}
