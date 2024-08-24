@@ -1,5 +1,6 @@
 use crate::{
-    player::{Player, QueueEntry},
+    player::Player,
+    queue::QueueEntry,
     util::{reply_error, reply_ok, try_get_guild_id_and_channel},
     {Context, Error},
 };

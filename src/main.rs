@@ -11,6 +11,7 @@ use tokio::sync::Mutex;
 mod commands;
 mod handler;
 mod player;
+mod queue;
 mod util;
 
 struct Data {
