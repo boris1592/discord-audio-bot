@@ -21,7 +21,7 @@ pub async fn skip(ctx: Context<'_>) -> Result<(), Error> {
         }
     };
 
-    if let None = player.get_queue().await.0 {
+    if let None = player.get_queue().await.current {
         reply_error(&ctx, "Not playing").await?;
         return Ok(());
     }

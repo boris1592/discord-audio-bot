@@ -1,37 +1,12 @@
-use crate::{handler::CustomEventHandler, Data};
-use poise::serenity_prelude as serenity;
-use reqwest::Client as HttpClient;
-use songbird::{
-    input::{AuxMetadataError, Compose, YoutubeDl},
-    tracks::TrackHandle,
-    CoreEvent, Event, Songbird, TrackEvent,
+use crate::{
+    handler::CustomEventHandler,
+    queue::{Queue, QueueEntry},
+    Data,
 };
-use std::{collections::VecDeque, future::Future, sync::Arc};
+use poise::serenity_prelude as serenity;
+use songbird::{input::YoutubeDl, CoreEvent, Event, Songbird, TrackEvent};
+use std::{future::Future, sync::Arc};
 use tokio::sync::Mutex;
-
-#[derive(Clone)]
-pub struct QueueEntry {
-    pub url: Box<str>,
-    pub name: Box<str>,
-}
-
-impl QueueEntry {
-    pub async fn new(url: Box<str>, client: HttpClient) -> Result<Self, AuxMetadataError> {
-        let mut ytdl = YoutubeDl::new(client, url.clone().into());
-        let name = ytdl.aux_metadata().await?.title.unwrap().into();
-        Ok(Self { url, name })
-    }
-
-    pub fn format(&self) -> String {
-        format!("[{}]({})", self.name, self.url)
-    }
-}
-
-#[derive(Default)]
-struct Queue {
-    current: Option<(QueueEntry, TrackHandle)>,
-    queue: VecDeque<QueueEntry>,
-}
 
 pub struct Player {
     guild_id: serenity::GuildId,
@@ -69,11 +44,8 @@ impl Player {
         }
     }
 
-    pub async fn get_queue(&self) -> (Option<QueueEntry>, Vec<QueueEntry>) {
-        let queue = self.queue.lock().await;
-        let entry = queue.current.clone().map(|(entry, _)| entry);
-        let queue = queue.queue.clone().into();
-        (entry, queue)
+    pub async fn get_queue(&self) -> Queue {
+        self.queue.lock().await.clone()
     }
 
     async fn update(self: &Arc<Self>) {
@@ -86,7 +58,7 @@ impl Player {
         let next = match queue.queue.pop_front() {
             Some(next) => next,
             None => {
-                self.remove().await;
+                self.remove_player().await;
                 return;
             }
         };
@@ -108,16 +80,8 @@ impl Player {
                 // particular closure won't be called more than once, but the compiler
                 // does not know about this.
                 let clone = self.clone();
-                let handler = CustomEventHandler::new(move || {
-                    let player = clone.clone();
-
-                    async move {
-                        let mut queue = player.queue.lock().await;
-                        let _ = queue.current.take();
-                        queue.queue.clear();
-                        player.remove().await;
-                    }
-                });
+                let handler =
+                    CustomEventHandler::new(move || clone.clone().clear_queue_and_remove_player());
 
                 call.lock()
                     .await
@@ -133,7 +97,7 @@ impl Player {
         // As mentioned above, we cannot just borrow `self` in the closure since it
         // must be 'static.
         let clone = self.clone();
-        let handler = CustomEventHandler::new(move || clone.clone().remove_current());
+        let handler = CustomEventHandler::new(move || clone.clone().drop_current_and_update());
 
         track
             .add_event(Event::Track(TrackEvent::End), handler.clone())
@@ -146,15 +110,22 @@ impl Player {
         let _ = queue.current.replace((next, track));
     }
 
-    async fn remove(&self) {
+    async fn remove_player(&self) {
         let mut players = self.bot_data.players.lock().await;
         let _ = self.manager.remove(self.guild_id).await;
         players.remove(&self.guild_id);
     }
 
+    async fn clear_queue_and_remove_player(self: Arc<Self>) {
+        let mut queue = self.queue.lock().await;
+        let _ = queue.current.take();
+        queue.queue.clear();
+        self.remove_player().await;
+    }
+
     // For some reason normal `async fn` syntax doesn't produce
     // a `Future` that is `Send`, so here we are...
-    fn remove_current(self: Arc<Self>) -> impl Future<Output = ()> + Send {
+    fn drop_current_and_update(self: Arc<Self>) -> impl Future<Output = ()> + Send {
         async move {
             let _ = self.queue.lock().await.current.take();
             self.update().await;

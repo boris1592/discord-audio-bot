@@ -1,4 +1,5 @@
 use crate::{
+    queue::Queue,
     util::{reply_ok, try_get_guild_id},
     Context, Error,
 };
@@ -14,20 +15,22 @@ pub async fn queue(ctx: Context<'_>) -> Result<(), Error> {
         players.get(&guild_id).map(|player| player.clone())
     };
 
-    let (current, queue) = match player {
+    let queue = match player {
         Some(player) => player.get_queue().await,
-        None => (None, vec![]),
+        None => Queue::default(),
     };
 
-    let current_msg = match current {
-        Some(entry) => format!("Currently playing: {}", entry.format()),
+    let current_msg = match queue.current {
+        Some(entry) => format!("Currently playing: {}", entry.0.format()),
         None => "Nothing is being played.".into(),
     };
-    let queue_msg = match queue.len() {
+
+    let queue_msg = match queue.queue.len() {
         0 => "Queue is empty.".into(),
         _ => format!(
             "Queue:\n{}",
             queue
+                .queue
                 .iter()
                 .enumerate()
                 .map(|(index, entry)| format!("{}. {}", index + 1, entry.format()))
