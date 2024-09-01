@@ -3,7 +3,6 @@ target/
 .env
 .gitignore
 .dockerignore
-compose.yml
 Dockerfile
 LICENSE
 README.md
