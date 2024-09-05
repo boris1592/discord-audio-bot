@@ -5,8 +5,7 @@ use crate::{
 use poise::serenity_prelude as serenity;
 use reqwest::Client as HttpClient;
 use songbird::SerenityInit;
-use std::{collections::HashMap, env, error, sync::Arc};
-use tokio::sync::Mutex;
+use std::{env, error, sync::Arc};
 
 mod commands;
 mod handler;
@@ -15,8 +14,8 @@ mod queue;
 mod util;
 
 struct Data {
+    player: Player,
     http_client: HttpClient,
-    players: Mutex<HashMap<serenity::GuildId, Arc<Player>>>,
 }
 
 type Error = Box<dyn error::Error + Send + Sync>;
@@ -39,9 +38,10 @@ async fn main() {
         .setup(|ctx, _ready, framework| {
             Box::pin(async move {
                 poise::builtins::register_globally(ctx, &framework.options().commands).await?;
+                let http_client = HttpClient::new();
                 Ok(Arc::new(Data {
-                    http_client: HttpClient::new(),
-                    players: Mutex::default(),
+                    player: Player::new(songbird::get(ctx).await.unwrap(), http_client.clone()),
+                    http_client,
                 }))
             })
         })
