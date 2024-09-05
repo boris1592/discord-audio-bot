@@ -10,8 +10,8 @@ pub async fn queue(ctx: Context<'_>) -> Result<(), Error> {
         Some(guild_id) => guild_id,
         None => return Ok(()),
     };
-    let queue = match ctx.data().players.lock().await.get(&guild_id) {
-        Some(player) => player.get_queue().await,
+    let queue = match ctx.data().player.get_queue(guild_id).await {
+        Some(queue) => queue,
         None => Queue::default(),
     };
 

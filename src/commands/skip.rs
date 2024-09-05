@@ -9,25 +9,9 @@ pub async fn skip(ctx: Context<'_>) -> Result<(), Error> {
         Some(guild_id) => guild_id,
         None => return Ok(()),
     };
-    let player = {
-        let players = ctx.data().players.lock().await;
-        players.get(&guild_id).map(|player| player.clone())
-    };
-    let player = match player {
-        Some(player) => player,
-        None => {
-            reply_error(&ctx, "Not playing.").await?;
-            return Ok(());
-        }
-    };
 
-    if let None = player.get_queue().await.current {
-        reply_error(&ctx, "Not playing").await?;
-        return Ok(());
+    match ctx.data().player.skip(guild_id).await {
+        Ok(_) => reply_ok(&ctx, "Skipped.").await,
+        Err(_) => reply_error(&ctx, "Not playing.").await,
     }
-
-    player.skip().await;
-
-    reply_ok(&ctx, "Skipped.").await?;
-    return Ok(());
 }
