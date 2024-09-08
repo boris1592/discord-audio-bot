@@ -95,21 +95,4 @@ impl PlayerInner {
 
         let _ = player.queue.current.replace((next, track));
     }
-
-    // Normal async fn syntax leads to a Future cycle that the compiler isn't happy about
-    fn remove_current(
-        self: Arc<Self>,
-        guild_id: serenity::GuildId,
-    ) -> impl Future<Output = ()> + Send {
-        async move {
-            let chan_player = match self.players.lock().await.get(&guild_id) {
-                Some(player) => player.clone(),
-                None => return,
-            };
-
-            let mut chan_player = chan_player.lock().await;
-            let _ = chan_player.queue.current.take();
-            self.update(chan_player.deref_mut()).await;
-        }
-    }
 }
