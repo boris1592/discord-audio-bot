@@ -7,7 +7,7 @@ pub async fn try_get_guild_id(ctx: &Context<'_>) -> Result<Option<serenity::Guil
         return Ok(Some(guild.id));
     }
 
-    reply_error(&ctx, "You must be in a guild to use this command.").await?;
+    reply_error(ctx, "You must be in a guild to use this command.").await?;
     Ok(None)
 }
 
@@ -29,7 +29,7 @@ pub async fn try_get_guild_id_and_channel(
         return Ok(Some((guild_id, channel_id)));
     }
 
-    reply_error(&ctx, "You must be in a voice channel to use this command.").await?;
+    reply_error(ctx, "You must be in a voice channel to use this command.").await?;
     Ok(None)
 }
 

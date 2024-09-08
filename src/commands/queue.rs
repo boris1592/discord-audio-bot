@@ -1,5 +1,4 @@
 use crate::{
-    queue::Queue,
     util::{reply_ok, try_get_guild_id},
     Context, Error,
 };
@@ -10,10 +9,12 @@ pub async fn queue(ctx: Context<'_>) -> Result<(), Error> {
         Some(guild_id) => guild_id,
         None => return Ok(()),
     };
-    let queue = match ctx.data().player.get_queue(guild_id).await {
-        Some(queue) => queue,
-        None => Queue::default(),
-    };
+    let queue = ctx
+        .data()
+        .player
+        .get_queue(guild_id)
+        .await
+        .unwrap_or_default();
 
     let current_msg = match queue.current {
         Some(entry) => format!("Currently playing: {}", entry.0.format()),
