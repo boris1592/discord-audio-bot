@@ -14,7 +14,7 @@ mod queue;
 mod util;
 
 struct Data {
-    player: Player,
+    player: Arc<Player>,
     http_client: HttpClient,
 }
 
@@ -40,7 +40,10 @@ async fn main() {
                 poise::builtins::register_globally(ctx, &framework.options().commands).await?;
                 let http_client = HttpClient::new();
                 Ok(Arc::new(Data {
-                    player: Player::new(songbird::get(ctx).await.unwrap(), http_client.clone()),
+                    player: Arc::new(Player::new(
+                        songbird::get(ctx).await.unwrap(),
+                        http_client.clone(),
+                    )),
                     http_client,
                 }))
             })
